@@ -30,8 +30,8 @@ from sklearn.datasets import load_iris, load_digits
 #soybean = read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/soybean/soybean-large.data", header=F)
 #wine_quality = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', header=T, sep = ";")
 # 
-ecoli = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/ecoli/ecoli.data', header=F, sep="")
-ecoli  = subset(ecoli, select = -c(1))
+# ecoli = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/ecoli/ecoli.data', header=F, sep="")
+# ecoli  = subset(ecoli, select = -c(1))
 
 avai_dataset = ['iris', 'mnist', 'fashion_mnist', ]
 
@@ -76,7 +76,7 @@ def load_data(dataset_name):
         X = dataset[:, :-1]
         y = dataset[:, -1]
 
-    if dataset  == 'ionosphere':
+    if dataset_name == 'ionosphere':
         url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/ionosphere/ionosphere.data'
         data = pd.read_csv(url, header=None)
         data.iloc[:, -1] = pd.Categorical(data.iloc[:, -1]).codes
