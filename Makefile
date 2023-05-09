@@ -12,7 +12,7 @@
 
 #  To download mnist + fashion_mnist : make download_all
 
-download_all: init_ds download_mnist
+download_all: init_ds download_mnist download_fashion_mnist
 
 init_ds:
 	mkdir -p data
