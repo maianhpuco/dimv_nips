@@ -4,7 +4,7 @@ hyper:
       batch_size: 64
       hint_rate: 0.9 
       alpha: 100
-      iteration: 10000
+      iterations: 10000
 
     knn:
       n_neighbors: 3 
