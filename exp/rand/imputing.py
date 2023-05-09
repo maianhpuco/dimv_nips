@@ -56,39 +56,39 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
             from src.imputer import mean_imputer
             Ximp, duration = mean_imputer(Xmtrain, **hyperparams)
 
-        if algo == "softimpute":
+        elif algo == "softimpute":
             from src.imputer import softimpute_imputer
             Ximp, duration = softimpute_imputer(Xmtrain, **hyperparams)
 
-        if algo == "mice":
+        elif algo == "mice":
             from src.imputer import mice_imputer
             Ximp, duration = mice_imputer(Xmtrain, **hyperparams)
 
-        if algo == "imputepca":
+        elif algo == "imputepca":
             from src.imputer import imputepca_imputer
             Ximp, duration = imputepca_imputer(Xmtrain, **hyperparams)
 
-        if algo == "em":
+        elif algo == "em":
             from src.imputer import em_imputer
             Ximp, duration = em_imputer(Xmtrain, **hyperparams)
 
-        if algo == "missforest":
+        elif algo == "missforest":
             from src.imputer import missforest_imputer
             Ximp, duration = missforest_imputer(Xmtrain, **hyperparams)
 
-        if algo == "knn":
+        elif algo == "knn":
             from src.imputer import knn_imputer
             Ximp, duration = knn_imputer(Xmtrain, **hyperparams)
 
-        if algo == "gain":
+        elif algo == "gain":
             from src.imputer import gain_imputer
             Ximp, duration = gain_imputer(Xmtrain, **hyperparams)
 
-        if algo == "ginn":
+        elif algo == "ginn":
             from src.imputer import ginn_imputer
             Ximp, duration = ginn_imputer(Xmtrain, **hyperparams)
 
-        if algo == "dimv":
+        elif algo == "dimv":
             from src.imputer import dimv_imputer
             Ximp, duration = dimv_imputer(Xmtrain, **hyperparams)
 

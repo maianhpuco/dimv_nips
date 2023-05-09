@@ -223,7 +223,7 @@ def missforest_imputer(X, **kwargs):
         **kwargs
     )  # n_neighbors=5 # this should be read from cofig file
 
-    Ximp = imputer.fit_transform(Xtrain)
+    Ximp = imputer.fit_transform(X)
     end = time.time()
 
     duration = end - start
