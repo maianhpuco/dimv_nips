@@ -2,14 +2,12 @@ import os
 import sys
 
 import sklearn.neighbors._base  # scikit-learn==1.1.2
-from fancyimpute import SoftImpute  # install  then install cvxopt-1.2.6
 # import softimpute
-# sys.path.append("")
+sys.path.append("")
 # this is for the package missingpy
 
 sys.modules["sklearn.neighbors.base"] = sklearn.neighbors._base
 
-from missingpy import MissForest
 
 from sklearn.impute import SimpleImputer
 from sklearn.experimental import enable_iterative_imputer
@@ -60,9 +58,12 @@ def mean_imputer(X, **kwargs):
 
 
 def softimpute_imputer(X, **kwargs):
+    from fancyimpute import SoftImpute  # install  then install cvxopt-1.2.6
+
     start = time.time()
 
     imputer = SoftImpute(**kwargs)  # default maxit = 1000
+    # imputer = SoftImpute()  # default maxit = 1000
     Ximp = imputer.fit_transform(X)
 
     end = time.time()
@@ -217,6 +218,7 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
 
 
 def missforest_imputer(X, **kwargs):
+    from missingpy import MissForest
     start = time.time()
 
     imputer = MissForest(
@@ -243,19 +245,21 @@ def knn_imputer(X, **kwargs):
 
 
 def gain_imputer(X, **kwargs):
-    #    start = time.time()
-    #
-    #    Ximp = gain(X, kwargs)
-    #
-    #    end = time.time()
-    #    duration = end - start
-    #
-    #    return Ximp, duration
-    #
-    pass
+    from includes.GAIN.gain import gain
+    # return gain(X, self.gain_params);
+
+    start = time.time()
+
+    Ximp = gain(X, kwargs)
+
+    end = time.time()
+    duration = end - start
+
+    return Ximp, duration
 
 
 def ginn_imputer(X, **kwargs):
+
     pass
 
 
