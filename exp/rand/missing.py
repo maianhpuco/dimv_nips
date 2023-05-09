@@ -8,6 +8,7 @@ import yaml
 from src.load_data import load_data
 from src.utils import create_randomly_missing
 from src.utils import get_directory
+
 # sys.path.append("")  # run from the root directory
 
 with open("exp/cfg.yml", "r") as f:
@@ -19,10 +20,7 @@ def create_missing(dataset_name, missing_rates):
 
     for mrate in missing_rates:
         missing_directory = get_directory(
-            stage="missing",
-            mono_or_rand="rand",
-            dataset_name=dataset_name,
-            mrate=mrate
+            stage="missing", mono_or_rand="rand", dataset_name=dataset_name, mrate=mrate
         )
 
         Xmiss = create_randomly_missing(
@@ -34,8 +32,7 @@ def create_missing(dataset_name, missing_rates):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-            description="Create missing data (randomly)")
+    parser = argparse.ArgumentParser(description="Create missing data (randomly)")
 
     parser.add_argument("--ds", type=str, default=None)
     # parser.add_argument("--missing_rates", type=float, default = [.1, .2, .3, .4, .5, .6, .7, 8, .9])
