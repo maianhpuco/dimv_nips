@@ -10,11 +10,13 @@ import yaml
 from src.utils import get_directory
 # sys.path.append("")
 
-with open("exp/cfg.yml", "r") as f:
-    cfg = yaml.safe_load(f)
 
+# hyperparameters = lambda algo: cfg["hyper"]["rand"][algo]
+def hyperparameters(algo):
+    with open("exp/cfg.yml", "r") as f:
+        cfg = yaml.safe_load(f)
 
-hyperparameters = lambda algo: cfg["hyper"]["rand"][algo]
+    return cfg["hyper"]["rand"][algo]
 
 
 def impute(algo, ds_name, missing_rates=None, dryrun=False):
