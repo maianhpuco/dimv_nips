@@ -5,14 +5,12 @@
 #     @for arg in $(wordlist 2,4,$(ARGS)); do \
 #         python train.py $(word 1,$(ARGS)) $$arg; \
 #     done 
-
 # --------------------------------------------------
 #  Download raw dataset
 # --------------------------------------------------
-
 #  To download mnist + fashion_mnist : make download_all
 
-download_all: init_ds download_mnist
+download_all: init_ds download_mnist download_fashion_mnist
 
 init_ds:
 	mkdir -p data
@@ -30,4 +28,4 @@ download_fashion_mnist:
 	curl http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz 	-o data/raw/fashion_mnist/train-images-idx3-ubyte.gz
 	curl http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz 	-o data/raw/fashion_mnist/train-labels-idx1-ubyte.gz
 	curl http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz 	-o data/raw/fashion_mnist/t10k-images-idx3-ubyte.gz 
-	curl http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz 	-o data/raw/fashion_mnist/t10k-labels-idx1-ubyte.gz 
+	curl http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz 	-o data/raw/fashion_mnist/t10k-labels-idx1-ubyte.gz
