@@ -28,7 +28,7 @@ mono_missing:
 
 mono_imputing:
 	for algo in $(ALGOS); do \
-		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun$DRYRUN;\
+		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $DRYRUN;\
 	done 
 	
 
