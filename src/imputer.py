@@ -263,7 +263,7 @@ def dimv_imputer(X, **kwargs):
     imputer.fit(X, n_jobs = n_jobs)
 
     #run cross validation 
-    best_alpha = imputer.cross_validate(train_percent = 0.2)
+    best_alpha = imputer.cross_validate(train_percent = train_percent)
     print("Alpha choosen after CV: {} with scores {} ".format(
         imputer.best_alpha, imputer.cv_score))
 
