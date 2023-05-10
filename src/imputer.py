@@ -253,4 +253,21 @@ def ginn_imputer(X, **kwargs):
 
 
 def dimv_imputer(X, **kwargs):
-    pass
+    
+    n_jobs = kwargs.get("n_jobs")
+    train_percent = kwargs.get("train_percent")
+
+    from DIMVImputation import DIMVImputation
+    start = time.time() 
+    imputer = DIMVImputation()  
+    imputer.fit(X, n_jobs = n_jobs)
+
+    #run cross validation 
+    best_alpha = imputer.cross_validate(train_percent = 0.2)
+    print("Alpha choosen after CV: {} with scores {} ".format(
+        imputer.best_alpha, imputer.cv_score))
+
+    Ximp = imputer.transform(X, alpha = best_alpha)            
+    duration = time.time() - start 
+    return Ximp, duration 
+
