@@ -32,7 +32,6 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
         )
 
         Xmiss_path  = os.path.join(missing_dir, "Xmiss.npz")
-
         Xmiss = np.load(Xmiss_path)["arr_0"]
 
         if dryrun:
