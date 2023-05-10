@@ -15,7 +15,7 @@ with open("exp/cfg.yml", "r") as f:
 
 
 def create_missing(dataset_name, missing_rates):
-    Xtrain, ytrain = load_data(dataset_name)
+    X, y = load_data(dataset_name)
 
     w = cfg_loaded["data_meta"][dataset_name]["im_width"]
     h = cfg_loaded["data_meta"][dataset_name]["im_height"]
@@ -28,12 +28,17 @@ def create_missing(dataset_name, missing_rates):
             mrate=mrate,
         )
 
-        X_train_missing, _ = create_image_monotone_missing(
-            Xtrain, 0.5, mrate, mrate, w, h
+        Xmiss, _ = create_image_monotone_missing(
+            X, 0.5, mrate, mrate, w, h
         )
-        train_name = np.savez_compressed(
-            missing_directory + "Xtrain.npz", X_train_missing
-        )
+
+        file_name = "Xmiss.npz"
+        file_path = os.path.join(missing_directory, file_name)
+
+        np.savez(file_path, Xmiss)
+        print("save at path {}".format(file_path)) 
+        
+
 
 
 if __name__ == "__main__":

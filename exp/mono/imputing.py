@@ -29,20 +29,12 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
             mono_or_rand="mono",
             dataset_name=ds_name, mrate=mrate
         )
-        X_mtrain_path = os.path.join(missing_dir, "Xtrain.npz")
-        # X_mtest_path = os.path.join(missing_dir, "Xtest.npz")
+        Xmiss_path  = os.path.join(missing_dir, "Xmiss.npz")
 
-        Xmtrain = np.load(X_mtrain_path)["arr_0"]
-        # Xmtest = np.load(X_mtest_path)["arr_0"]
+        Xmiss = np.load(Xmiss_path)["arr_0"]
+
         if dryrun:
-            Xmtrain = Xmtrain[:1000,]
-            # Xmtest = Xmtest[:300,]
-
-        # imputing and save the result
-
-        # _func_name = "{}_{}".format(algo, "imputer")
-        # print("func: ", _func_name)
-        # _func = eval(_func_name)
+            Xmiss = Xmiss[:1000,]
 
         try:
             hyperparams = hyperparameters(algo)
@@ -53,48 +45,47 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
 
         if algo == "mean":
             from src.imputer import mean_imputer
-            Ximp, duration = mean_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = mean_imputer(Xmiss, **hyperparams)
 
         elif algo == "softimpute":
             from src.imputer import softimpute_imputer
-            Ximp, duration = softimpute_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = softimpute_imputer(Xmiss, **hyperparams)
 
         elif algo == "mice":
             from src.imputer import mice_imputer
-            Ximp, duration = mice_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = mice_imputer(Xmiss, **hyperparams)
 
         elif algo == "imputepca":
             from src.imputer import imputepca_imputer
-            Ximp, duration = imputepca_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = imputepca_imputer(Xmiss, **hyperparams)
 
         elif algo == "em":
             from src.imputer import em_imputer
-            Ximp, duration = em_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = em_imputer(Xmiss, **hyperparams)
 
         elif algo == "missforest":
             from src.imputer import missforest_imputer
-            Ximp, duration = missforest_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = missforest_imputer(Xmiss, **hyperparams)
 
         elif algo == "knn":
             from src.imputer import knn_imputer
-            Ximp, duration = knn_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = knn_imputer(Xmiss, **hyperparams)
 
         elif algo == "gain":
             from src.imputer import gain_imputer
-            Ximp, duration = gain_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = gain_imputer(Xmiss, **hyperparams)
 
         elif algo == "ginn":
             from src.imputer import ginn_imputer
-            Ximp, duration = ginn_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = ginn_imputer(Xmiss, **hyperparams)
 
         elif algo == "dimv":
             from src.imputer import dimv_imputer
-            Ximp, duration = dimv_imputer(Xmtrain, **hyperparams)
+            Ximp, duration = dimv_imputer(Xmiss, **hyperparams)
 
         else:
             raise NotImplementedError(f"{algo} is not implemented")
 
-        # Ximp, duration = _func(Xmtrain, **hyperparams)
 
         print(
                 ">> Complete imputation {} with shape {}"
@@ -103,9 +94,7 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
 
         print("Total time: {}".format(duration))
 
-        # asser no missing data left in the imputed (algorithm is converged)
-        # assert np.sum(np.isnan(train_imp)) == 0, "train_imp still contain missing"
-        # assert np.sum(np.isnan(test_imp)) == 0 , "test_imp still contain missing"
+        assert np.sum(np.isnan(Ximp)) == 0, "imputed data Ximp still contain missing"
 
 
 if __name__ == "__main__":
@@ -113,8 +102,8 @@ if __name__ == "__main__":
         description="Imputing data after monotone missing created"
     )
 
-    parser.add_argument("ds", type=str, default=None)
-    parser.add_argument("algo", type=str)
+    parser.add_argument("--ds", type=str, default=None)
+    parser.add_argument("--algo", type=str)
     parser.add_argument("--missing_rates", type=list, default=[0.6, 0.5, 0.4])
     parser.add_argument("--dryrun", type=bool, default=False)
 
