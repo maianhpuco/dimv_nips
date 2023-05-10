@@ -1,15 +1,25 @@
 ALGOS = mean softimpute 
 
-ifneq ($algo, )
-	ALGOS = $algo
-endif 
+# include root folder into python search path
+ROOT=$${PWD}
+
+test:
+	echo ${ROOT}
+
+# ifneq ($algo, )
+# 	ALGOS = $algo
+# endif 
 
 DATA = mnist
-DRYRUN = False 
-mono_all:
+DRYRUN = True 
+
+# mono_all:
 
 mono_missing:
 	python3 exp/mono/missing.py --ds $(DATA)
+
+rand_missing:
+	ROOT=$${PWD} python3 exp/rand/missing.py --ds $(DATA)
 
 # --------------------------------------------------
 # Run missing crreation, imputation
@@ -30,28 +40,16 @@ mono_imputing:
 	for algo in $(ALGOS); do \
 		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $DRYRUN;\
 	done 
+
+rand_imputing:
+	for algo in $(ALGOS); do \
+		ROOT=$${PWD} python3 exp/rand/imputing.py --ds $(DATA) --algo $$algo --dryrun $DRYRUN;\
+	done 
 	
-
-
-
-
-
-
-# ALL_ALGOS := mean, 
-# 
-# .PHONY: train
-# train:
-#     @for arg in $(wordlist 2,4,$(ARGS)); do \
-#         python train.py $(word 1,$(ARGS)) $$arg; \
-#     done 
 # --------------------------------------------------
 #  Download raw dataset
 # --------------------------------------------------
 #  To download mnist + fashion_mnist : make download_all
-
-
-
-
 download_all: init_ds download_mnist download_fashion_mnist
 
 init_ds:
