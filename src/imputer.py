@@ -20,17 +20,6 @@ import numpy as np
 # import to run R code : if got error makee sure : conda install libcblas
 import pandas as pd
 
-# import rpy2.rinterface_lib.callbacks
-# my_callback = lambda *args: None
-# rpy2.rinterface_lib.callbacks.consolewrite_warnerror =  my_callback
-#
-# if getting error importing packages; make sure you done this
-# export RPY2_CFFI_MODE=API
-
-# gain
-
-# from src.GAIN.gain import gain
-
 # TODO
 # [x] mean
 # [x] softimpute (fancyimpute)
