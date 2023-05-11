@@ -1,4 +1,4 @@
-ALGOS = mean softimpute 
+ALGOS = mean softimpute mice imputepca em knn gain ginn vae dimv 
 
 # include root folder into python search path
 ROOT=$${PWD}
@@ -11,9 +11,8 @@ test:
 # endif 
 
 DATA = mnist
-DRYRUN = True 
+DRYRUN = 0 
 
-# mono_all:
 
 mono_missing:
 	python3 exp/mono/missing.py --ds $(DATA)
@@ -33,12 +32,12 @@ rand_missing:
 # CUSTOM INPUT: 
 # make DATA=mnist ALGOS="mean softimpute"  mono_imputing
 #
-# CUSTOM INPUT: 
-# make DATA=mnist ALGOS="mean softimpute" DRYRUN=TRUE mono_imputing
+# CUSTOM INPUT for DRYRUN 
+# make DATA=mnist ALGOS="mean softimpute dimv" DRYRUN=1 mono_imputing
 
 mono_imputing:
 	for algo in $(ALGOS); do \
-		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $DRYRUN;\
+		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done 
 
 rand_imputing:
