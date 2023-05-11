@@ -1,11 +1,12 @@
-ALGOS = mean softimpute 
+ALGOS = mean softimpute mice imputepca em knn gain ginn vae dimv 
 
 ifneq ($algo, )
 	ALGOS = $algo
 endif 
 
 DATA = mnist
-DRYRUN = False 
+DRYRUN = 0 
+
 mono_all:
 
 mono_missing:
@@ -23,12 +24,12 @@ mono_missing:
 # CUSTOM INPUT: 
 # make DATA=mnist ALGOS="mean softimpute"  mono_imputing
 #
-# CUSTOM INPUT: 
-# make DATA=mnist ALGOS="mean softimpute" DRYRUN=TRUE mono_imputing
+# CUSTOM INPUT for DRYRUN 
+# make DATA=mnist ALGOS="mean softimpute dimv" DRYRUN=1 mono_imputing
 
 mono_imputing:
 	for algo in $(ALGOS); do \
-		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $DRYRUN;\
+		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done 
 	
 

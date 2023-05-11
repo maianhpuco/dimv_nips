@@ -4,10 +4,10 @@ hyper:
       batch_size: 64
       hint_rate: 0.9 
       alpha: 100
-      iterations: 10000
+      iterations: 20000
 
     knn:
-      n_neighbors: 3 
+      n_neighbors: 2
 
     missforest: 
       random_state: 42
@@ -24,6 +24,7 @@ hyper:
 
     em:
       maxits: 10
+
 
     imputepca:
       maxits: 10
