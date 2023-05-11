@@ -40,6 +40,13 @@ mono_imputing:
 		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done 
 
+
+mono_classifying:
+	for algo in $(ALGOS); do \
+		python3 exp/mono/classifying.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
+	done 
+
+
 rand_imputing:
 	for algo in $(ALGOS); do \
 		ROOT=$${PWD} python3 exp/rand/imputing.py --ds $(DATA) --algo $$algo --dryrun $DRYRUN;\
