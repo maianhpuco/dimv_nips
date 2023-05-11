@@ -44,8 +44,6 @@ mono_imputing:
 mono_classifying:
 	for algo in $(ALGOS); do \
 		python3 exp/mono/classifying.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
-	done 
-
 
 rand_imputing:
 	for algo in $(ALGOS); do \
