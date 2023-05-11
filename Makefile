@@ -13,6 +13,7 @@ test:
 DATA = mnist
 DRYRUN = 0 
 
+
 mono_missing:
 	python3 exp/mono/missing.py --ds $(DATA)
 
@@ -38,6 +39,11 @@ mono_imputing:
 	for algo in $(ALGOS); do \
 		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done 
+
+
+mono_classifying:
+	for algo in $(ALGOS); do \
+		python3 exp/mono/classifying.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 
 rand_imputing:
 	for algo in $(ALGOS); do \
