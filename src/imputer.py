@@ -1,24 +1,12 @@
 import os
 import sys
-
-import sklearn.neighbors._base  # scikit-learn==1.1.2
-# import softimpute
-sys.path.append("")
-# this is for the package missingpy
-
-sys.modules["sklearn.neighbors.base"] = sklearn.neighbors._base
-
-
-from sklearn.impute import SimpleImputer
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer, KNNImputer
-
-# from src.PCA.missMDA import *
+sys.path.append("") 
 import time
 import numpy as np
+import pandas as pd
 
 # import to run R code : if got error makee sure : conda install libcblas
-import pandas as pd
+
 
 # TODO
 # [x] mean
@@ -29,13 +17,16 @@ import pandas as pd
 # [x] EM (R)
 # [x] KNN (sklearn)
 # [] ginn
-# [] gain
-# [] dimv
+# [] vae 
+# [x] gain
+# [x] dimv
 # [] pipeline with Makefile; addding try catch if running multilple algorithm
 # [] docker to help install
 
 
 def mean_imputer(X, **kwargs):
+    from sklearn.impute import SimpleImputer
+
     start = time.time()
     imputer = SimpleImputer(**kwargs)
 
@@ -61,7 +52,10 @@ def softimpute_imputer(X, **kwargs):
     return Ximp, duration
 
 
-def mice_imputer(X, **kwargs):
+def mice_imputer(X, **kwargs):  
+    from sklearn.experimental import enable_iterative_imputer
+    from sklearn.impute import IterativeImputer, KNNImputer
+
     start = time.time()
     imputer = IterativeImputer(**kwargs)  # max_iter=10, random_state=0)
     Ximp = imputer.fit_transform(X)
@@ -189,8 +183,10 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
         """.format(
         args_string
     )
-
+    print("Input Shape", X.shape)
     mmask = np.isnan(X)
+    Ximp = X.copy() 
+    print("input shape", mmask.shape)
 
     impute_EM = SignatureTranslatedAnonymousPackage(rcode_string, "impute_EM")
 
@@ -198,16 +194,22 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
 
     imp = result.rx2("imp")
     duration = result.rx2("duration")
+    imp = np.asarray(imp)
+    print(imp.shape)
 
     # fill to the original matrix
-    Ximp = X.copy()
     Ximp[mmask] = imp[mmask]
 
-    return Ximp, duration
+    return Ximp, duration[0]
 
 
 def missforest_imputer(X, **kwargs):
+
+    # this is for the package missingpy
+    import sklearn.neighbors._base  # scikit-learn==1.1.2
+    sys.modules["sklearn.neighbors.base"] = sklearn.neighbors._base
     from missingpy import MissForest
+
     start = time.time()
 
     imputer = MissForest(
@@ -222,9 +224,12 @@ def missforest_imputer(X, **kwargs):
 
 
 def knn_imputer(X, **kwargs):
+
+    from sklearn.impute import KNNImputer
+
     start = time.time()
 
-    imputer = KNNImputer()  # n_neighbors=5 # this should be read from cofig file
+    imputer = KNNImputer(**kwargs)  # n_neighbors=5 # this should be read from cofig file
     Ximp = imputer.fit_transform(X)
 
     end = time.time()
@@ -234,6 +239,7 @@ def knn_imputer(X, **kwargs):
 
 
 def gain_imputer(X, **kwargs):
+
     from includes.GAIN.gain import gain
     # return gain(X, self.gain_params);
 
@@ -248,12 +254,19 @@ def gain_imputer(X, **kwargs):
 
 
 def ginn_imputer(X, **kwargs):
+    from inclues.ginn import ginn_run 
+    
+    start = time.time()
+    Ximp = ginn_run(X, y)
+    duration = time.time() - start 
+    return Ximp, duration 
 
-    pass
-
+def vae_imputer(X, **kwargs):
+    
+    pass 
 
 def dimv_imputer(X, **kwargs):
-    
+    print("X.shape", X.shape) 
     n_jobs = kwargs.get("n_jobs")
     train_percent = kwargs.get("train_percent")
 

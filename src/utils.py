@@ -130,26 +130,41 @@ def create_randomly_missing(data: np.ndarray, perc_del: float) -> np.ndarray:
     return missing_data.reshape(n, -1)
 
 
-def rmse_loss(a: np.ndarray, b: np.ndarray) -> float:
-    """
-    Calculate the root mean squared error (RMSE) between two arrays.
-    Args:
-        a (np.ndarray): The first array.
-        b (np.ndarray): The second array.
-    Returns:
-        float: The RMSE between the two arrays.
-    """
-    subtracted = a - b
-    nan_mask = np.isnan(subtracted)
-    subtracted[nan_mask] = 0
-    numerator = np.sum(subtracted ** 2)
+#def rmse_loss(a: np.ndarray, b: np.ndarray) -> float:
+#    """
+#    Calculate the root mean squared error (RMSE) between two arrays.
+#    Args:
+#        a (np.ndarray): The first array.
+#        b (np.ndarray): The second array.
+#    Returns:
+#        float: The RMSE between the two arrays.
+#    """ 
+#    subtracted = a - b
+#    nan_mask = np.isnan(subtracted)
+#    subtracted[nan_mask] = 0
+#    numerator = np.sum(subtracted ** 2)
+#
+#    denominator_m = np.ones_like(a)
+#    denominator_m[nan_mask] = 0
+#    denominator = np.sum(denominator_m)
+#
+#    rmse = np.sqrt(numerator / float(denominator))
+#    return rmse
 
-    denominator_m = np.ones_like(a)
-    denominator_m[nan_mask] = 0
-    denominator = np.sum(denominator_m)
+def rmse_calc(ori_data, imp_data, missing_mask):
+    """
+    missing_mask: 1 is missing_data, 0 is observed_data
+    """
 
-    rmse = np.sqrt(numerator / float(denominator))
-    return rmse 
+    nominator = np.sum(
+            (missing_mask * ori_data \
+                    - missing_mask * imp_data
+             ) ** 2
+            )
+    
+    denominator = np.sum(missing_mask)
+
+    return np.sqrt(nominator / denominator)
 
 def find_largest_elements(s_missing_fts, s_avai_fts, arr, m):
     """
@@ -179,17 +194,31 @@ def find_largest_elements(s_missing_fts, s_avai_fts, arr, m):
     return is_largest
 
 
-def get_directory(stage=None, mono_or_rand=None, dataset_name=None, mrate=None):
+def get_directory(stage=None, mono_or_rand=None, dataset_name=None, mrate=None, exp_num=None):
 
     assert mono_or_rand in ['mono', 'rand'], "Wrong input mono_or_rand"
-    assert stage in ['raw', 'missing', 'imputed', 'predicted','plot', 'rmse_result', 'time_measure_result'], "Wrong input stage"
-    directory = 'data/{}/{}/{}/{}/'.format(
+    assert stage in [
+            'raw', 
+            'missing', 
+            'exp'], "Wrong input stage"
+
+    if stage == 'exp':
+        directory = 'data/{}/{}/{}/{}/{}'.format(
+            stage,
+            mono_or_rand, 
+            exp_num, 
+            dataset_name, 
+            str(int(mrate*100))
+            )
+    else: 
+        directory = 'data/{}/{}/{}/{}/'.format(
             stage, 
             mono_or_rand, 
             dataset_name, 
             str(int(mrate*100))
             )
 
+        
     if not os.path.exists(directory):
         os.makedirs(directory)
     print("directory: ", directory)
