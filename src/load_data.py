@@ -4,37 +4,12 @@ import os
 import sys
 from urllib.request import urlretrieve
 
+from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
 import requests
 from sklearn.datasets import load_digits
 from sklearn.datasets import load_iris
-# sys.path.append("..")
-
-# breast_tissue = read_excel_url('https://archive.ics.uci.edu/ml/machine-learning-databases/00192/BreastTissue.xls')
-# breast_tissue = subset(breast_tissue, select = -c(1) )
-# parkinsons = read.csv('http://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data')
-# parkinsons = subset(parkinsons, select = -c(name) )
-# new_thyroid = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/thyroid-disease/new-thyroid.data', header=F)
-# breast_cancer_wisconsin = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data', header = F)
-# breast_cancer_wisconsin = subset(breast_cancer_wisconsin, select = -c(1) )
-# letter = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/letter-recognition/letter-recognition.data', header=F)
-# spam = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.data', header=F )
-# yeast = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/yeast/yeast.data', header=F, sep="")
-# yeast = subset(yeast, select = -c(1) )
-# lymphography = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/lymphography/lymphography.data', header=F)
-# lymphography
-# glass = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/glass/glass.data', header = F)
-# glass = subset(glass, select = -c(1) )
-# segmentation = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/image/segmentation.data', skip = 4, header = F)
-# wisconsin = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data', header=F)
-# wisconsin = subset(wisconsin, select = -c(1) )
-# soybean = read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/soybean/soybean-large.data", header=F)
-# wine_quality = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', header=T, sep = ";")
-#
-# ecoli = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/ecoli/ecoli.data', header=F, sep="")
-# ecoli  = subset(ecoli, select = -c(1))
-
 avai_dataset = [
     "iris",
     "mnist",
@@ -90,13 +65,29 @@ def load_data(dataset_name):
     #     X = data.iloc[:, :-1].to_numpy()
     #     y = data.iloc[:, -1].to_numpy()
 
-    return X, y
+    return X, y 
 
 
-def load_data_split(dataset_name):
+def create_split_indices(dataset_name):
+    #for small data set, create split and return index corresponding with merge
     if dataset_name in ["fashion_mnist", "mnist"]:
-        return load_data_mnist(dataset_name)
+        Xtrain, ytrain, Xtest, ytest = load_data_mnist(dataset_name)
+        train_indices = range(0, Xtrain.shape[0])
+        test_indices = range(Xtrain.shape[0], Xtrain.shape[0] + Xtest.shape[0])
 
+
+    else: 
+        merged_data, y = load_data(dataset_name)
+
+        Xtrain, Xtest, train_indices, test_indices = train_test_split(\
+            merged_data, np.arange(merged_data.shape[0]), test_size=0.2, random_state=42)
+        ytrain = y[train_indices]
+        ytest  = y[test_indices] 
+
+    return Xtrain, Xtest, ytrain, ytest, train_indices, test_indices
+        
+    
+            
 
 def load_data_mnist(dataset_name):
     """
@@ -158,3 +149,32 @@ def load_mnist(path, kind="train"):
         )
 
     return images, labels
+
+
+# sys.path.append("..")
+
+# breast_tissue = read_excel_url('https://archive.ics.uci.edu/ml/machine-learning-databases/00192/BreastTissue.xls')
+# breast_tissue = subset(breast_tissue, select = -c(1) )
+# parkinsons = read.csv('http://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data')
+# parkinsons = subset(parkinsons, select = -c(name) )
+# new_thyroid = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/thyroid-disease/new-thyroid.data', header=F)
+# breast_cancer_wisconsin = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data', header = F)
+# breast_cancer_wisconsin = subset(breast_cancer_wisconsin, select = -c(1) )
+# letter = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/letter-recognition/letter-recognition.data', header=F)
+# spam = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.data', header=F )
+# yeast = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/yeast/yeast.data', header=F, sep="")
+# yeast = subset(yeast, select = -c(1) )
+# lymphography = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/lymphography/lymphography.data', header=F)
+# lymphography
+# glass = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/glass/glass.data', header = F)
+# glass = subset(glass, select = -c(1) )
+# segmentation = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/image/segmentation.data', skip = 4, header = F)
+# wisconsin = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data', header=F)
+# wisconsin = subset(wisconsin, select = -c(1) )
+# soybean = read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/soybean/soybean-large.data", header=F)
+# wine_quality = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', header=T, sep = ";")
+#
+# ecoli = read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/ecoli/ecoli.data', header=F, sep="")
+# ecoli  = subset(ecoli, select = -c(1))
+
+
