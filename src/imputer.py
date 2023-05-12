@@ -106,7 +106,7 @@ def imputepca_imputer(X, **kwargs):
             imp = fit_train$completeObs[,,drop=F]
 
             end <- Sys.time()
-            duration <- end - start  
+            duration <- as.numeric(difftime(end, start, units = "secs")) 
 
             return(list("imp" = imp, "duration" = duration))
             }}
@@ -176,7 +176,7 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
             imp = impute_EM(data, {}) 
 
             end <- Sys.time()
-            duration <- end - start  
+            duration <- as.numeric(difftime(end, start, units = "secs"))
 
             return(list("imp" = imp, "duration" = duration))
             }}
@@ -266,17 +266,24 @@ def vae_imputer(X, **kwargs):
     pass 
 
 def dimv_imputer(X, **kwargs):
+    print("kwargs", kwargs)
     print("X.shape", X.shape) 
+
     n_jobs = kwargs.get("n_jobs")
     train_percent = kwargs.get("train_percent")
-
+    initalizing = kwargs.get("initializing")  
+    
     from DIMVImputation import DIMVImputation
+    
     start = time.time() 
-    imputer = DIMVImputation()  
-    imputer.fit(X, n_jobs = n_jobs)
+    imputer = DIMVImputation()
+    print("initializing", initalizing)
+
+    imputer.fit(X, n_jobs = n_jobs, initializing=initalizing)
 
     #run cross validation 
-    best_alpha = imputer.cross_validate(train_percent = train_percent)
+    best_alpha = imputer.cross_validate(\
+            train_percent = train_percent)
     print("Alpha choosen after CV: {} with scores {} ".format(
         imputer.best_alpha, imputer.cv_score))
 
