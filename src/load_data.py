@@ -129,9 +129,10 @@ def load_data_mnist(dataset_name):
     data_path = "data/raw/{}/raw/".format(dataset_name)
     if os.path.isdir(data_path) == 0:
         os.mkdir(data_path)
-    print(data_path)
+    #print(data_path)
+
     for name in RESOURCES:
-        print(data_path + name)
+        #print(data_path + name)
         if os.path.isfile(data_path + name) == 0:
             url = urls.get(dataset_name) + name
             urlretrieve(url, os.path.join(data_path, name))

@@ -40,10 +40,16 @@ mono_imputing:
 		python3 exp/mono/imputing.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done 
 
-
-mono_classifying:
+mono_classifying_no_grid_search:
 	for algo in $(ALGOS); do \
 		python3 exp/mono/classifying.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
+	done
+
+mono_classifying: 
+	python3 exp/mono/grid_search.py --ds $(DATA) --dryrun $(DRYRUN);\
+	for algo in $(ALGOS); do \
+		python3 exp/mono/classifying.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
+	done
 
 rand_imputing:
 	for algo in $(ALGOS); do \
