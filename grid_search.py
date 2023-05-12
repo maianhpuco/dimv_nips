@@ -29,19 +29,21 @@ def get_save_path(ds_name, mrate, exp_num, create_new_exp):
         exp_num =  np.amax(np.array([int(i) for i in integer_files])) + 1
     else: 
         exp_num =  np.amax(np.array([int(i) for i in integer_files]))
-    _dir = get_directory(
-            stage = 'exp', 
-            mono_or_rand  = 'mono', 
-            dataset_name = ds_name, 
-            mrate = mrate,
-            exp_num = exp_num 
-            )
+    _dir = os.path.join(
+            [i for i get_directory(
+                stage = 'exp', 
+                mono_or_rand  = 'mono', 
+                dataset_name = ds_name, 
+                mrate = mrate,
+                exp_num = exp_num 
+                ).split("_")]) 
+    
 
     print("saved folder ", _dir)
     return _dir 
 
 
-def classify(
+def grid_search(
         algo, 
         ds_name, 
         missing_rates=None, 
@@ -49,46 +51,20 @@ def classify(
         exp_num=None, 
         create_new_exp=False):
 
-    if dryrun==1:
+    if dryrun == 1:
         missing_rates = [missing_rates[0]] 
 
-    exp_dir = get_save_path(ds_name, 0, exp_num, create_new_exp)
 
-    ground_truth_path = "/".join(exp_dir.split("/")[:-1])
-    print("Ground Truth Path: ", ground_truth_path)
+    print("Ground Truth Path: ", get_save_path(ds_name, 0, exp_num, create_new_exp))
     
-        
-    acc_f   = open(os.path.join(ground_truth_path, "acc_ground_truth.json"))
-    hparams_f = open(os.path.join(ground_truth_path, "hyperparameters.json"))
-   
-    hparams = json.load(hparams_f)
-    acc_gtruth = json.load(acc_f)
-    
-    print("Best acc ", acc_gtruth) 
-    print("Best params ", hparams)
 
-    for mrate in missing_rates:
-        save_folder = get_save_path(
-            ds_name, mrate, exp_num, create_new_exp)
+    hparams, acc = grid_search(X, y)
 
-        X_imp_path = os.path.join(save_folder, "X_imp_{}.npz".format(algo))     
-        Ximp = np.load(X_imp_path)["arr_0"] 
-    
-        _, y = load_data(ds_name)          
+    with open(os.path.join(ground_truth_path, "acc_ground_truth.json"), 'w') as f:
+        json.dump({"acc": acc}, f) 
 
-        if dryrun == 1:
-            print("dry runing")
-            Ximp, y = Ximp[:1000], y[:1000]
-        
-        acc = classification(Ximp, y, hparams)
-        
-        with open(os.path.join(save_folder, "acc_{}.json".format(algo)), 'w') as f:
-            json.dump({"acc": acc}, f) 
-        print(
-                ">> Complete save {} with acc {}  with at path {}"
-                .format(algo, acc, save_folder)
-            )
-
+    with open(os.path.join(ground_truth_path, "hyperparamete.json"), 'w') as f:
+        json.dump(hparams, f) 
 
 
 if __name__ == "__main__":
@@ -108,7 +84,7 @@ if __name__ == "__main__":
     #r = get_exp_num("mnist", .5)
 
 
-    classify(args.algo, 
+    grid_search(args.algo, 
             args.ds, 
             missing_rates = args.missing_rates, 
             dryrun = args.dryrun, 

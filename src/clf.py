@@ -1,11 +1,10 @@
 import numpy as np
 import xgboost as xgb
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score 
+from sklearn.model_selection import train_test_split, KFold
 from src.load_data import load_data 
 
 def grid_search(X, y):
-
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42)
@@ -13,27 +12,44 @@ def grid_search(X, y):
     dtrain = xgb.DMatrix(X_train, label=y_train)
     dtest = xgb.DMatrix(X_test, label=y_test)
    
-    max_depths = [5, 7, 10]
+    max_depths = [5, 10, 15]
     learning_rates = [0.01, 0.05, 0.1]
-   
+
     best_params = {}
     best_accuracy = 0
-   
+    num_class =  np.unique(y).shape[0]
+    print("num class ", num_class )
+
+    n_splits = 5
+    kf = KFold(n_splits=n_splits)
+
     for max_depth in max_depths:
         for learning_rate in learning_rates:
             params = {
                 'max_depth': max_depth,
                 'learning_rate': learning_rate,
                 'objective': 'multi:softmax',
-                'num_class': np.unique(y).shape[0],
+                'num_class': num_class, 
                 'eval_metric': 'mlogloss'
-             }
-            model = xgb.train(params, dtrain)
-   
-            y_pred = model.predict(dtest)
-   
-            accuracy = accuracy_score(y_test, y_pred)
-   
+            }
+            # Initialize score for current hyperparameter combination
+            scores = []
+
+            # Train and test model using k-fold cross-validation
+            for train_index, test_index in kf.split(X):
+                X_train, X_test = X[train_index], X[test_index]
+                y_train, y_test = y[train_index], y[test_index]
+                dtrain = xgb.DMatrix(X_train, label=y_train)
+                dtest = xgb.DMatrix(X_test, label=y_test)
+                model = xgb.train(params, dtrain)
+                y_pred = model.predict(dtest)
+                scores.append(accuracy_score(y_test, y_pred))
+                
+            # Calculate mean accuracy score across all folds
+            accuracy = np.mean(scores)
+            print(">> params {}, Avg Acc  {} ".format(params, accuracy))
+
+            # Update best parameters and score if current model performs better
             if accuracy > best_accuracy:
                 best_params = params
                 best_accuracy = accuracy
@@ -41,7 +57,7 @@ def grid_search(X, y):
     print("Done grid search param")
     print("Best hyperparameters:", best_params)
     print("Accuracy score:", best_accuracy)
-    return best_params 
+    return (best_params , best_accuracy)
 
 
 def classification(Ximp, y, params):
@@ -52,7 +68,6 @@ def classification(Ximp, y, params):
     dtrain = xgb.DMatrix(X_train, label=y_train)
     dtest  = xgb.DMatrix(X_test, label=y_test) 
 
-    
     model = xgb.train(params, dtrain)
    
     y_pred = model.predict(dtest)
