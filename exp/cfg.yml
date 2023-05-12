@@ -32,6 +32,43 @@ hyper:
     dimv: 
       n_jobs: -1
       train_percent: 0.2
+      initializing : False 
+
+  rand: #adddataset cfg1 
+    gain:
+      batch_size: 64
+      hint_rate: 0.9 
+      alpha: 100
+      iterations: 20000
+
+    knn:
+      n_neighbors: 2
+
+    missforest: 
+      random_state: 42
+      n_jobs: -1
+      verbose: 0
+      max_iter: 3
+      n_estimators: 10
+      criterion: 'squared_error'
+      max_features: 1.0
+
+    softimpute:
+      verbose: False
+      max_iters: 100
+
+    em:
+      maxits: 10
+
+
+    imputepca:
+      maxits: 10
+
+    dimv: 
+      n_jobs: -1
+      train_percent: 0.2
+      initializing: True
+
 
 
     
