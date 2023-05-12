@@ -18,7 +18,7 @@ def hyperparameters(algo):
     return cfg["hyper"]["rand"][algo]
 
 
-def impute(algo, ds_name, missing_rates=None, dryrun=False):
+def impute(algo, ds_name, missing_rates=None, dryrun=0):
     # get_data
     if dryrun:
         missing_rates = [missing_rates[0]]
@@ -105,8 +105,10 @@ if __name__ == "__main__":
 
     parser.add_argument("--ds", type=str, default=None)
     parser.add_argument("--algo", type=str)
-    parser.add_argument("--missing_rates", type=list, default=[0.6, 0.5, 0.4])
-    parser.add_argument("--dryrun", type=bool, default=False)
+    parser.add_argument("--missing_rates", type=list, default=[.4, .5, .6])
+    parser.add_argument("--dryrun", type=int)
+
+
 
     args = parser.parse_args()
 
