@@ -1,3 +1,7 @@
+dev:
+	python includes/VAE/dataset.py
+
+
 ALGOS = mean softimpute mice imputepca em knn gain ginn vae dimv 
 
 # include root folder into python search path
