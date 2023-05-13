@@ -161,9 +161,8 @@ def rmse_calc(ori_data, imp_data, missing_mask):
                     - missing_mask * imp_data
              ) ** 2
             )
-    
+     
     denominator = np.sum(missing_mask)
-
     return np.sqrt(nominator / denominator)
 
 def find_largest_elements(s_missing_fts, s_avai_fts, arr, m):

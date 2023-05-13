@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--ds", type=str, default=None)
     parser.add_argument("--algo", type=str)
-    parser.add_argument("--missing_rates", type=list, default=[0.6, 0.5, 0.4])
+    parser.add_argument("--missing_rates", type=list, default=[0.6])
     parser.add_argument("--dryrun", type=int, default=0)
     parser.add_argument("--exp_num", type=int, default=None)
     parser.add_argument("--create_new_exp", type=int, default=None)

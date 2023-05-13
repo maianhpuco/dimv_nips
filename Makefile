@@ -10,7 +10,6 @@ test:
 # 	ALGOS = $algo
 # endif 
 
-DATA = mnist
 DRYRUN = 0 
 
 
@@ -55,8 +54,16 @@ rand_imputing:
 	for algo in $(ALGOS); do \
 		ROOT=$${PWD} python3 exp/rand/imputing.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done 
-	
-# --------------------------------------------------
+
+rand_imputing_loop:
+	for exp in {0..9}; do\
+		for data in $(DATAS); do\
+			for algo in $(ALGOS); do \
+				ROOT=$${PWD} python3 exp/rand/imputing.py --ds $$data --exp_num $$exp --algo $$algo --dryrun $(DRYRUN);\
+			done \
+		done \
+	done
+	# --------------------------------------------------
 #  Download raw dataset
 # --------------------------------------------------
 #  To download mnist + fashion_mnist : make download_all

@@ -2,6 +2,7 @@ import argparse
 import gzip
 import os
 import sys
+import urllib
 from urllib.request import urlretrieve
 
 from sklearn.model_selection import train_test_split
@@ -33,37 +34,49 @@ def load_data(dataset_name):
         X = digits.data
         y = digits.target
 
-    # if dataset_name == "wiscosin":
+    if dataset_name == "wiscosin":
 
-    #     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
-    #     data = pd.read_csv(url, header=None)
+        url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
+        data = pd.read_csv(url, header=None)
 
-    #     X = data.iloc[:, 2:].to_numpy()  # exclude first two columns (id and diagnosis)
-    #     y = (
-    #         data.iloc[:, 1].map({"M": 1, "B": 0}).to_numpy()
-    #     )  # convert diagnosis column to binary labels
+        X = data.iloc[:, 2:].to_numpy()  # exclude first two columns (id and diagnosis)
+        y = (data.iloc[:, 1].map({"M": 1, "B": 0}).to_numpy())  # convert diagnosis column to binary labels
 
-    # if dataset_name == "wine":
-    #     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data"
-    #     data = pd.read_csv(url, header=None)
+    if dataset_name == "wine":
+         url = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data"
+         data = pd.read_csv(url, header=None)
 
-    #     X = data.iloc[:, 1:].to_numpy()
-    #     y = data.iloc[:, 0].to_numpy()
+         X = data.iloc[:, 1:].to_numpy()
+         y = data.iloc[:, 0].to_numpy()
 
-    # if dataset_name == "seeds":
-    #     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00236/seeds_dataset.txt"
-    #     raw_data = urllib.request.urlopen(url)
-    #     dataset = np.loadtxt(raw_data)
+    if dataset_name == "seeds":
+         url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00236/seeds_dataset.txt"
+         raw_data = urllib.request.urlopen(url)
+         dataset = np.loadtxt(raw_data)
 
-    #     X = dataset[:, :-1]
-    #     y = dataset[:, -1]
+         X = dataset[:, :-1]
+         y = dataset[:, -1]
 
-    # if dataset_name == "ionosphere":
-    #     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/ionosphere/ionosphere.data"
-    #     data = pd.read_csv(url, header=None)
-    #     data.iloc[:, -1] = pd.Categorical(data.iloc[:, -1]).codes
-    #     X = data.iloc[:, :-1].to_numpy()
-    #     y = data.iloc[:, -1].to_numpy()
+    if dataset_name == "ionosphere":
+        url = "https://archive.ics.uci.edu/ml/machine-learning-databases/ionosphere/ionosphere.data"
+        data = pd.read_csv(url, header=None)
+        data.iloc[:, -1] = pd.Categorical(data.iloc[:, -1]).codes
+
+        X = data.iloc[:, :-1].to_numpy()
+        y = data.iloc[:, -1].to_numpy()
+
+    if dataset_name == "yeast":
+        url = "https://archive.ics.uci.edu/ml/machine-learning-databases/yeast/yeast.data"
+        data = pd.read_csv(url, delim_whitespace=True, header=None)
+        X = data.iloc[:, 1:9].to_numpy()
+        y = pd.Categorical(data.iloc[:, -1]).codes
+
+    if dataset_name =="new_thyroid":
+        url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/thyroid-disease/new-thyroid.data'
+        data = pd.read_csv(url, header=None)
+
+        X = data.iloc[1:, ].to_numpy()
+        y = data.iloc[:, 0].to_numpy()
 
     return X, y 
 

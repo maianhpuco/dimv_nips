@@ -57,6 +57,7 @@ def mice_imputer(X, **kwargs):
     from sklearn.impute import IterativeImputer, KNNImputer
 
     start = time.time()
+    print("mice", kwargs)
     imputer = IterativeImputer(**kwargs)  # max_iter=10, random_state=0)
     Ximp = imputer.fit_transform(X)
 
@@ -66,7 +67,7 @@ def mice_imputer(X, **kwargs):
     return Ximp, duration
 
 
-def imputepca_imputer(X, **kwargs):
+def imputepca_imputer(X_input, **kwargs):
     # this code is for not prining R console
     import logging
     import rpy2.rinterface_lib.callbacks
@@ -91,13 +92,13 @@ def imputepca_imputer(X, **kwargs):
     rcode_string = """
         install.packages("remotes")
         library(remotes)
-        install_github("cran/missMDA") 
+        install.packages("missMDA") 
+        #install_github("cran/missMDA") 
         library("missMDA")
         print("complete install")
-        print(dim(data))
         imputing <- function(data){{
             start <- Sys.time()
-
+        
             #ncomp = missMDA::estim_ncpPCA(data, ncp.min=2)
             #print(paste0("number of component choosen: ", ncomp$ncp))
 
@@ -113,10 +114,7 @@ def imputepca_imputer(X, **kwargs):
         """.format(
         args_string
     )
-
-    Ximp = X.copy()
-    mmask = np.isnan(X)
-
+    X = X_input.copy()
     missMDA = SignatureTranslatedAnonymousPackage(rcode_string, "missMDA")
 
     # imputePCA can not handle std = 0
@@ -130,7 +128,7 @@ def imputepca_imputer(X, **kwargs):
     # start impute
     result = missMDA.imputing(pd.DataFrame(X_no0std))
 
-    imp_no0std = result.rx2("imp")
+    imp_no0std = np.array(result.rx2("imp"))
     duration = result.rx2("duration")
 
     # fill to the original matrix
@@ -138,12 +136,14 @@ def imputepca_imputer(X, **kwargs):
     X[:, no0std_indices] = X_no0std
     # if value missing lie in the column have std = 0-> then fill with the others value in that column (or mean)
     print(sum(np.isnan(X)))
-    imputer = SimpleImputer(**kwargs)
+
+    from sklearn.impute import SimpleImputer
+    imputer = SimpleImputer()
     XImpMean = imputer.fit_transform(X)
 
-    Ximp[np.isnan(X)] = XImpMean[np.isnan(X)]
-
-    return Ximp, duration
+    X[np.isnan(X)] = XImpMean[np.isnan(X)]
+    time.sleep(3) 
+    return X, duration[0]
 
 
 def em_imputer(X, **kwargs):  # 70p -  1 iteration
@@ -195,7 +195,6 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
     imp = result.rx2("imp")
     duration = result.rx2("duration")
     imp = np.asarray(imp)
-    print(imp.shape)
 
     # fill to the original matrix
     Ximp[mmask] = imp[mmask]
@@ -254,7 +253,7 @@ def gain_imputer(X, **kwargs):
 
 
 def ginn_imputer(X, **kwargs):
-    from inclues.ginn import ginn_run 
+    from src.inclues.ginn import ginn_run 
     
     start = time.time()
     Ximp = ginn_run(X, y)
@@ -274,7 +273,7 @@ def dimv_imputer(X, **kwargs):
     initalizing = kwargs.get("initializing")  
     
     from DIMVImputation import DIMVImputation
-    
+     
     start = time.time() 
     imputer = DIMVImputation()
     print("initializing", initalizing)

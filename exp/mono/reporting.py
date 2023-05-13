@@ -97,27 +97,25 @@ def build_report(datasets, missing_rates, exp_num):
         acc_dfs = pd.concat([acc_dfs, acc_df], ignore_index=True)
         rmse_dfs = pd.concat([rmse_dfs, rmse_df], ignore_index=True)
 
-        #print(acc_dfs)
+        print(acc_dfs)
         #print(rmse_dfs)
 
-
-    acc_report = acc_df.pivot(index=['dataset','missing_rate'], columns='method', values='acc')
+    
+    acc_report = acc_dfs.pivot(
+            index=['dataset','missing_rate'], columns='method', values='acc')
     print(acc_report)
-#   
-#    print(acc_report)
-#
-#                        
-#    latex = acc_report.to_latex()
-#    for i, row in acc_report.iterrows():
-#        max_val = row.max()
-#        for col, val in row.items():
-#            if val == max_val:
-#                latex = latex.replace(str(val), r'\textbf{' + str(val) + '}', 1)
-#    
-#    print(latex) 
-#        
-#
 
+    acc_latex = acc_report.to_latex(
+            index=True, escape=False)
+    print(acc_latex)
+
+
+    rmse_report = rmse_dfs.pivot(
+            index=['dataset','missing_rate'], columns='method', values='rmse')
+            
+    rmse_latex = rmse_report.to_latex(
+            index=True, escape=False)
+    print(rmse_latex)
 
 if __name__ == "__main__":
     build_report(["mnist", "fashion_mnist"], [.6, .5, .4], 0)
