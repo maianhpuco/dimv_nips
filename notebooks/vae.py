@@ -5,15 +5,16 @@ import pickle
 import random
 import shutil
 
+from matplotlib import pyplot as plt
+
 import numpy as np
+from scipy import stats
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
 import tensorflow.compat.v2 as tf
 import tensorflow_datasets as tfds
 import tensorflow_probability as tfp
-from matplotlib import pyplot as plt
-from scipy import stats
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
 
 tf.enable_v2_behavior()
 
@@ -195,51 +196,51 @@ for ds in [train_ds, valid_ds, test_ds]:
 
 # visualize data
 
-# for example in train_ds.take(1):
-#     for i in range(5):
-#         print("Label:", example["y"][i])
-#         if DATASET == "MNIST":
-#             print("Original image")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(np.squeeze(example["x"][i]), cmap="gray")
-#             plt.axis("off")
-#             plt.show()
-#             print("Missingness mask")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(np.squeeze(example["b"][i]), cmap="gray")
-#             plt.axis("off")
-#             plt.show()
-#             print("Image with zero imputation")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(np.squeeze(example["x_zero_imp"][i]), cmap="gray")
-#             plt.axis("off")
-#             plt.show()
-#             print("Image with mean imputation")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(np.squeeze(example["x_mean_imp"][i]), cmap="gray")
-#             plt.axis("off")
-#             plt.show()
-#         else:
-#             print("Original image")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(example["x"][i])
-#             plt.axis("off")
-#             plt.show()
-#             print("Missingness mask")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(example["b"][i])
-#             plt.axis("off")
-#             plt.show()
-#             print("Image with zero imputation")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(example["x_zero_imp"][i])
-#             plt.axis("off")
-#             plt.show()
-#             print("Image with mean imputation")
-#             plt.figure(figsize=(1, 1))
-#             plt.imshow(example["x_mean_imp"][i])
-#             plt.axis("off")
-#             plt.show()
+for example in train_ds.take(1):
+    for i in range(5):
+        print("Label:", example["y"][i])
+        if DATASET == "MNIST":
+            print("Original image")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(np.squeeze(example["x"][i]), cmap="gray")
+            plt.axis("off")
+            plt.show()
+            print("Missingness mask")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(np.squeeze(example["b"][i]), cmap="gray")
+            plt.axis("off")
+            plt.show()
+            print("Image with zero imputation")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(np.squeeze(example["x_zero_imp"][i]), cmap="gray")
+            plt.axis("off")
+            plt.show()
+            print("Image with mean imputation")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(np.squeeze(example["x_mean_imp"][i]), cmap="gray")
+            plt.axis("off")
+            plt.show()
+        else:
+            print("Original image")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(example["x"][i])
+            plt.axis("off")
+            plt.show()
+            print("Missingness mask")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(example["b"][i])
+            plt.axis("off")
+            plt.show()
+            print("Image with zero imputation")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(example["x_zero_imp"][i])
+            plt.axis("off")
+            plt.show()
+            print("Image with mean imputation")
+            plt.figure(figsize=(1, 1))
+            plt.imshow(example["x_mean_imp"][i])
+            plt.axis("off")
+            plt.show()
 
 
 class Encoder(tf.keras.layers.Layer):
