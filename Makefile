@@ -1,7 +1,9 @@
+
 dev:
 	ROOT=$${PWD} python exp/rand/imputing.py --ds mnist --algo vae --dryrun 1
 
-ALGOS = mean softimpute mice imputepca em knn gain ginn vae dimv 
+
+ALGOS = mean softimpute mice imputepca em knn gain dimv # ginn, vae 
 
 # include root folder into python search path
 ROOT=$${PWD}
@@ -18,17 +20,21 @@ DRYRUN = 0
 
 
 mono_missing:
-	python3 exp/mono/missing.py --ds $(DATA)
+	for one_ds in $(DATAS); do\
+		ROOT=$${PWD} python3 exp/rand/missing.py --ds $$one_ds ;\
+	done 
 
 rand_missing:
-	ROOT=$${PWD} python3 exp/rand/missing.py --ds $(DATA)
+	for one_ds in $(DATAS); do\
+		ROOT=$${PWD} python3 exp/rand/missing.py --ds $$one_ds;\
+	done 
 
 # --------------------------------------------------
 # Run missing crreation, imputation
 # --------------------------------------------------
 # Example:
 # make DATA=mnist mono_missing 
-#
+
 # RUN ALL ALGOS: 
 # make DATA=mnist mono_imputing
 #
@@ -54,12 +60,28 @@ mono_classifying:
 		python3 exp/mono/classifying.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done
 
+rand_imputing_one_algo:
+	for exp in {1..9}; do\
+		for data in $(DATAS); do \
+			ROOT=$${PWD} python3 exp/rand/imputing.py --ds $$data --algo $$ALGO --dryrun $(DRYRUN);\
+		done \
+	done
+
+
 rand_imputing:
 	for algo in $(ALGOS); do \
 		ROOT=$${PWD} python3 exp/rand/imputing.py --ds $(DATA) --algo $$algo --dryrun $(DRYRUN);\
 	done 
-	
-# --------------------------------------------------
+
+
+
+rand_imputing_loop:
+	for exp in {1..9}; do\
+		for data in $(DATAS); do\
+			for algo in $(ALGOS); do \
+				ROOT=$${PWD} python3 exp/rand/imputing.py --ds $$data --exp_num $$exp --algo $$algo --dryrun $(DRYRUN);\
+			done \
+		done 
 #  Download raw dataset
 # --------------------------------------------------
 #  To download mnist + fashion_mnist : make download_all

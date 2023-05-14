@@ -3,16 +3,11 @@ import sys
 
 root = os.environ.get("ROOT")
 sys.path.append(root)
-
 import time
 import numpy as np
 import pandas as pd
 
 # import to run R code : if got error makee sure : conda install libcblas
-import tensorflow.compat.v2 as tf
-from sklearn.model_selection import train_test_split
-from includes.VAE.dataset import generate_dataset
-from includes.VAE.train import train
 
 # TODO
 # [x] mean
@@ -116,13 +111,9 @@ def imputepca_imputer(X, **kwargs):
 
             return(list("imp" = imp, "duration" = duration))
             }}
-        """.format(
-        args_string
-    )
 
-    Ximp = X.copy()
-    mmask = np.isnan(X)
-
+        """.format(args_string)
+    X = X_input.copy()
     missMDA = SignatureTranslatedAnonymousPackage(rcode_string, "missMDA")
 
     # imputePCA can not handle std = 0
@@ -147,9 +138,9 @@ def imputepca_imputer(X, **kwargs):
     imputer = SimpleImputer(**kwargs)
     XImpMean = imputer.fit_transform(X)
 
-    Ximp[np.isnan(X)] = XImpMean[np.isnan(X)]
-
-    return Ximp, duration
+    X[np.isnan(X)] = XImpMean[np.isnan(X)]
+    time.sleep(3)
+    return X, duration[0]
 
 
 def em_imputer(X, **kwargs):  # 70p -  1 iteration
@@ -186,9 +177,7 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
 
             return(list("imp" = imp, "duration" = duration))
             }}
-        """.format(
-        args_string
-    )
+        """.format(args_string)
     print("Input Shape", X.shape)
     mmask = np.isnan(X)
     Ximp = X.copy()
@@ -219,8 +208,7 @@ def missforest_imputer(X, **kwargs):
     start = time.time()
 
     imputer = MissForest(
-        **kwargs
-    )  # n_neighbors=5 # this should be read from cofig file
+        **kwargs)  # n_neighbors=5 # this should be read from cofig file
 
     Ximp = imputer.fit_transform(X)
     end = time.time()
@@ -235,8 +223,7 @@ def knn_imputer(X, **kwargs):
     start = time.time()
 
     imputer = KNNImputer(
-        **kwargs
-    )  # n_neighbors=5 # this should be read from cofig file
+        **kwargs)  # n_neighbors=5 # this should be read from cofig file
     Ximp = imputer.fit_transform(X)
 
     end = time.time()
@@ -261,6 +248,10 @@ def gain_imputer(X, **kwargs):
 
 
 def vae_imputer(Xmiss, **kwargs):
+    import tensorflow.compat.v2 as tf
+    from sklearn.model_selection import train_test_split
+    from includes.VAE.dataset import generate_dataset
+    from includes.VAE.train import train
     # print(Xmiss).shape
     # Xmiss = [sample for sample in Xmiss]
     t0 = time.time()
@@ -304,17 +295,19 @@ def vae_imputer(Xmiss, **kwargs):
     return results, t0
 
 
-def ginn_imputer(X, **kwargs):
-    from inclues.ginn import ginn_run
+def ginn_imputer(X, y, **kwargs):
+    from includes.ginn import ginn_run
 
     start = time.time()
-    Ximp = ginn_run(X, y)
+    Ximp = ginn_run(X, y, kwargs)
     duration = time.time() - start
     return Ximp, duration
 
 
 def dimv_imputer(X, **kwargs):
+    print("kwargs", kwargs)
     print("X.shape", X.shape)
+
     n_jobs = kwargs.get("n_jobs")
     train_percent = kwargs.get("train_percent")
     initalizing = kwargs.get("initializing")
@@ -327,21 +320,11 @@ def dimv_imputer(X, **kwargs):
 
     imputer.fit(X, n_jobs=n_jobs, initializing=initalizing)
 
-    # run cross validation
-    best_alpha = imputer.cross_validate(train_percent=train_percent)
-    print(
-        "Alpha choosen after CV: {} with scores {} ".format(
-            imputer.best_alpha, imputer.cv_score
-        )
-    )
-
-    # run cross validation
-    best_alpha = imputer.cross_validate(train_percent=train_percent)
-    print(
-        "Alpha choosen after CV: {} with scores {} ".format(
-            imputer.best_alpha, imputer.cv_score
-        )
-    )
+    #run cross validation
+    best_alpha = imputer.cross_validate(\
+            train_percent = train_percent)
+    print("Alpha choosen after CV: {} with scores {} ".format(
+        imputer.best_alpha, imputer.cv_score))
 
     Ximp = imputer.transform(X, alpha=best_alpha)
     duration = time.time() - start

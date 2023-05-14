@@ -49,31 +49,13 @@ def build_one_report(dataset_name, missing_rates, exp_num):
         print(dir_path)
         files = os.listdir(dir_path)
 
-        rmse_pattern = r"rmse_(.*)\.json"
-        acc_pattern = r"acc_(.*)\.json"
+        pattern = r"X_imp_(.*)\.json"
 
         for fname in files:
             if re.match(rmse_pattern, fname):
-                frmse = open(os.path.join(dir_path, fname))
-                rmse_json = json.load(frmse)
-
-                rmse_json.update({
-                    'method': re.match(rmse_pattern, fname).group(1),
-                    'missing_rate': mrate
-                })
-
-                rmse_df = pd.concat(
-                    [rmse_df, pd.DataFrame([rmse_json])], ignore_index=True)
-            if re.match(acc_pattern, fname):
-                facc = open(os.path.join(dir_path, fname))
-                acc_json = json.load(facc)
-                acc_json.update({
-                    'method': re.match(acc_pattern, fname).group(1),
-                    'missing_rate': mrate
-                })
-
-                acc_df = pd.concat([acc_df, pd.DataFrame([acc_json])],
-                                   ignore_index=True)
+                imp = np.load(os.path.join(dir_path, fname))
+                
+                
 
     rmse_df.loc[rmse_df["method"] == "em", "time"] *= 3600
 
@@ -146,8 +128,8 @@ def convert_to_latex(agg_table, metric_name, mono_or_rand):
     asc = True
     if metric_name == 'acc':
         asc = False
-
-    agg_table['rank'] = (agg_table.groupby(['dataset', 'missing_rate'
+ 
+rmse--------   agg_table['rank'] = (agg_table.groupby(['dataset', 'missing_rate'
                                            ])['mean'].rank(ascending=asc,
                                                            method='dense'))
     if mono_or_rand == 'rand':
