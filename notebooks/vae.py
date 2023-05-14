@@ -585,6 +585,7 @@ METHODS = [
     "Zero Imputation Encoder Indicators",
     "Zero Imputation Encoder Decoder Indicators",
 ]
+
 metrics = {
     METHOD: {
         "elbo": [],

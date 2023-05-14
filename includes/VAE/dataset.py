@@ -19,7 +19,7 @@ def cast_img(example):
     return example
 
 
-def generate_dataset(ds_name: str, X: np.ndarray, y: np.ndarray, batch_size: int):
+def generate_dataset(ds_name: str, X: np.ndarray, y: np.ndarray, batch_size: int, infer=False):
     """
     Description:
         X:corrupted input (with missing value), assuming shape = (N x W x H x C)
@@ -33,7 +33,7 @@ def generate_dataset(ds_name: str, X: np.ndarray, y: np.ndarray, batch_size: int
     masks = []
     zero_imp_images = []
     mean_imp_images = []
-    labels = []
+    # labels = []
 
     # Mean across all example, assuming shape of X = (N x 28 x 28 x 1)
     x_mean = np.nanmean(X, axis=0)
@@ -41,15 +41,19 @@ def generate_dataset(ds_name: str, X: np.ndarray, y: np.ndarray, batch_size: int
     # data. In this experiment, we don't assume to have uncorrupted data, so we
     # compute x-mean on corrupted data
 
-    for example, label in zip(X, y):
+    # for example, label in zip(X, y):
+    for example in X:
         b = (~np.isnan(example)) * 1.0
 
         # Constructing dataset
         images.append(example)
         masks.append(b)
+
+        mask = np.isnan(example)
+        example[mask] = 0
         zero_imp_images.append(b * example)
         mean_imp_images.append(b * example + (1 - b) * x_mean)
-        labels.append(label)
+        # labels.append(label)
 
     dset = tf.data.Dataset.from_tensor_slices(
         {
@@ -57,16 +61,23 @@ def generate_dataset(ds_name: str, X: np.ndarray, y: np.ndarray, batch_size: int
             "x_zero_imp": zero_imp_images,
             "x_mean_imp": mean_imp_images,
             "b": masks,
-            "y": labels,
+            # "y": labels,
         }
     )
 
-    dset = (
-        dset.map(cast_img)
-        .shuffle(10000)
-        .batch(batch_size)
-        .prefetch(tf.data.experimental.AUTOTUNE)
-    )
+    if not infer:
+        dset = (
+            dset.map(cast_img)
+            .shuffle(10000)
+            .batch(batch_size)
+            .prefetch(tf.data.experimental.AUTOTUNE)
+        )
+    else:
+        dset = (
+            dset.map(cast_img)
+            .batch(batch_size)
+            .prefetch(tf.data.experimental.AUTOTUNE)
+        )
 
     return dset
 

@@ -19,6 +19,7 @@ def hyperparameters(algo):
 
 
 def impute(algo, ds_name, missing_rates=None, dryrun=False):
+
     # get_data
     if dryrun:
         missing_rates = [missing_rates[0]]
@@ -33,6 +34,7 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
 
         Xmiss_path  = os.path.join(missing_dir, "Xmiss.npz")
         Xmiss = np.load(Xmiss_path)["arr_0"]
+
 
         if dryrun:
             Xmiss = Xmiss[:1000,]
@@ -83,6 +85,11 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
         elif algo == "dimv":
             from src.imputer import dimv_imputer
             Ximp, duration = dimv_imputer(Xmiss, **hyperparams)
+
+        elif algo == "vae":
+            from src.vae_imputer import vae_imputer
+            Ximp, duration = vae_imputer(Xmiss)
+            # TODO: adding hyperparams
 
         else:
             raise NotImplementedError(f"{algo} is not implemented")
