@@ -1,9 +1,13 @@
 import numpy as np
 import math
 from typing import *
-import os 
+import os
+import re
+import json
 import sys
+
 sys.path.append("")
+
 
 def normalize(
     X: np.ndarray,
@@ -62,13 +66,9 @@ def rescale(X: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
 
 
 def create_image_monotone_missing(
-        data: np.ndarray, 
-        perc_del: float, 
-        perc_width: float, 
-        perc_height: float, 
-        im_width: int, 
-        im_height: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        data: np.ndarray, perc_del: float, perc_width: float,
+        perc_height: float, im_width: int,
+        im_height: int) -> Tuple[np.ndarray, np.ndarray]:
     """    
     Creates a monotone missing pattern in an image dataset by removing a section of the image from the bottom right corner.
     Args:
@@ -89,10 +89,10 @@ def create_image_monotone_missing(
     p = im_width * im_height
 
     # position (from width and height) of pixel would be deleted
-    from_width = math.ceil((1-perc_width)*im_width)-1
-    from_height = math.ceil((1-perc_width)*im_width)-1
+    from_width = math.ceil((1 - perc_width) * im_width) - 1
+    from_height = math.ceil((1 - perc_width) * im_width) - 1
 
-    nan_rows = np.unique(np.sort(np.random.randint(0, n, int(n*perc_del))))
+    nan_rows = np.unique(np.sort(np.random.randint(0, n, int(n * perc_del))))
     nan_rows = nan_rows[:, np.newaxis]
 
     col_idxs = np.arange(p).reshape(-1, m)
@@ -119,11 +119,11 @@ def create_randomly_missing(data: np.ndarray, perc_del: float) -> np.ndarray:
         np.ndarray: An array with the same shape as `data` where missing values are marked as NaN.
     """
     n = data.shape[0]
-    # Flatten data into 1 row 
+    # Flatten data into 1 row
     flatten_data = data.reshape(1, -1)
-    # Uniform missing mask 
-    missing_mask = np.random.uniform(0, 1, flatten_data.shape[1]).reshape(1, -1) 
-    # Mark as missing if value in mask  < perc_del 
+    # Uniform missing mask
+    missing_mask = np.random.uniform(0, 1, flatten_data.shape[1]).reshape(1, -1)
+    # Mark as missing if value in mask  < perc_del
     missing_data = flatten_data.copy().astype('float')
     missing_data[missing_mask <= perc_del] = np.nan
 
@@ -138,7 +138,7 @@ def create_randomly_missing(data: np.ndarray, perc_del: float) -> np.ndarray:
 #        b (np.ndarray): The second array.
 #    Returns:
 #        float: The RMSE between the two arrays.
-#    """ 
+#    """
 #    subtracted = a - b
 #    nan_mask = np.isnan(subtracted)
 #    subtracted[nan_mask] = 0
@@ -151,6 +151,7 @@ def create_randomly_missing(data: np.ndarray, perc_del: float) -> np.ndarray:
 #    rmse = np.sqrt(numerator / float(denominator))
 #    return rmse
 
+
 def rmse_calc(ori_data, imp_data, missing_mask):
     """
     missing_mask: 1 is missing_data, 0 is observed_data
@@ -161,10 +162,10 @@ def rmse_calc(ori_data, imp_data, missing_mask):
                     - missing_mask * imp_data
              ) ** 2
             )
-    
     denominator = np.sum(missing_mask)
 
     return np.sqrt(nominator / denominator)
+
 
 def find_largest_elements(s_missing_fts, s_avai_fts, arr, m):
     """
@@ -177,11 +178,10 @@ def find_largest_elements(s_missing_fts, s_avai_fts, arr, m):
     Returns:
         np.ndarray: A boolean array indicating whether each element in arr is one of the m largest elements.    
     """
-    
+
     # import pdb; pdb.set_trace()
     arr[s_missing_fts] = -np.inf
     arr[~s_avai_fts] = -np.inf
-    
 
     # Get the indices of the m largest elements
     indices_sorted_descending = np.argsort(arr)[::-1]
@@ -194,33 +194,55 @@ def find_largest_elements(s_missing_fts, s_avai_fts, arr, m):
     return is_largest
 
 
-def get_directory(stage=None, mono_or_rand=None, dataset_name=None, mrate=None, exp_num=None):
+def get_directory(stage=None,
+                  mono_or_rand=None,
+                  dataset_name=None,
+                  mrate=None,
+                  exp_num=None):
 
     assert mono_or_rand in ['mono', 'rand'], "Wrong input mono_or_rand"
-    assert stage in [
-            'raw', 
-            'missing', 
-            'exp'], "Wrong input stage"
+    assert stage in ['raw', 'missing', 'exp'], "Wrong input stage"
 
-    if stage == 'exp':
-        directory = 'data/{}/{}/{}/{}/{}'.format(
-            stage,
-            mono_or_rand, 
-            exp_num, 
-            dataset_name, 
-            str(int(mrate*100))
-            )
-    else: 
-        directory = 'data/{}/{}/{}/{}/'.format(
-            stage, 
-            mono_or_rand, 
-            dataset_name, 
-            str(int(mrate*100))
-            )
+    if True:
+        directory = 'data/{}/{}/{}/{}/{}'.format(stage, mono_or_rand, exp_num,
+                                                 dataset_name,
+                                                 str(int(mrate * 100)))
+        #    else:
 
-        
+
+#        directory = 'data/{}/{}/{}/{}/'.format(stage, mono_or_rand,
+#                                               dataset_name,
+#                                               str(int(mrate * 100)))
+#
     if not os.path.exists(directory):
         os.makedirs(directory)
-    print("directory: ", directory)
+    #print("directory: ", directory)
     return directory
-   
+
+
+def get_path_int_file(ds_name, mrate, exp_num, stage, missing_type):
+    if not os.path.exists("data/{}/{}".format(stage, missing_type)):
+        os.makedirs("data/{}/{}".format(stage, missing_type))
+    files = os.listdir("data/{}/{}".format(stage, missing_type))
+
+    pattern = "^\d+$"
+    regex = re.compile(pattern)
+    integer_files = [f for f in files if regex.match(f)]
+
+    if integer_files == []:
+        exp_num = 0
+    elif exp_num is not None:
+        exp_num = exp_num
+    elif create_new_exp == True:
+        exp_num = np.amax(np.array([int(i) for i in integer_files])) + 1
+    else:
+        exp_num = np.amax(np.array([int(i) for i in integer_files]))
+
+    _dir = get_directory(stage=stage,
+                         mono_or_rand=missing_type,
+                         dataset_name=ds_name,
+                         mrate=mrate,
+                         exp_num=exp_num)
+
+    print("saved folder ", _dir)
+    return _dir
