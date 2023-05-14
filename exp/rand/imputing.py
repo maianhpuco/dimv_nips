@@ -83,10 +83,13 @@ def impute(
 
         X_miss_path = os.path.join(missing_dir, "Xmiss.npz")
 
+        Xmiss = np.load(X_miss_path)['arr_0']
+        print("X_miss.shape", Xmiss.shape)
         if dryrun == 1:
-            X_miss = X_miss[
+            Xmiss = Xmiss[
                 :1000,
             ]
+        print("X_miss.shape", Xmiss.shape)
 
         try:
             hyperparams = get_hparams(algo)
@@ -150,7 +153,7 @@ def impute(
 
         save_folder = get_save_path(ds_name, mrate, exp_num, "exp")
 
-        mmask = np.isnan(X_miss)
+        mmask = np.isnan(Xmiss)
         rmse = rmse_calc(X_gtruth, Ximp, mmask)
 
         print("Algorithm: {}, Total time: {}, RMSE: {} ".format(
@@ -180,6 +183,7 @@ if __name__ == "__main__":
                         default=[i * .1 for i in range(1, 10)])
     parser.add_argument("--dryrun", type=int, default=0)
     parser.add_argument("--exp_num", type=int, default=None)
+    args = parser.parse_args()
 
     print(args.missing_rates)
     if isinstance(args.missing_rates, str):

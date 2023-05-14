@@ -36,8 +36,8 @@ def load_data(dataset_name):
 
     if dataset_name == "wiscosin":
 
-         url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
-         data = pd.read_csv(url, header=None)
+        url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
+        data = pd.read_csv(url, header=None)
 
         X = data.iloc[:, 2:].to_numpy(
         )  # exclude first two columns (id and diagnosis)
@@ -83,8 +83,6 @@ def load_data(dataset_name):
             1:,
         ].to_numpy()
         y = data.iloc[:, 0].to_numpy()
->>>>>>> Stashed changes
-
     return X, y
 
 
