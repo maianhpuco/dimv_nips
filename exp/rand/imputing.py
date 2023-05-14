@@ -66,7 +66,8 @@ def impute(
 ):
     # get_data
     if dryrun:
-        missing_rates = [missing_rates[0]]
+        # missing_rates = [missing_rates[0]]
+        pass
 
     for mrate in missing_rates:
         print("--------------------------------------")
