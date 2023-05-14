@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 # sys.path.append(ROOT)
 
 
-def vae_imputer(Xmiss):
+def vae_imputer(Xmiss, **kwargs):
     # print(Xmiss).shape
     # Xmiss = [sample for sample in Xmiss]
     t0 = time.time()
@@ -56,5 +56,3 @@ def vae_imputer(Xmiss):
     t0 = time.time() - t0
 
     return results, t0
-
-
