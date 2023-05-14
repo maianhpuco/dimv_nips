@@ -1,12 +1,18 @@
 import os
 import sys
-sys.path.append("") 
+
+root = os.environ.get("ROOT")
+sys.path.append(root)
+
 import time
 import numpy as np
 import pandas as pd
 
 # import to run R code : if got error makee sure : conda install libcblas
-
+import tensorflow.compat.v2 as tf
+from sklearn.model_selection import train_test_split
+from includes.VAE.dataset import generate_dataset
+from includes.VAE.train import train
 
 # TODO
 # [x] mean
@@ -17,7 +23,7 @@ import pandas as pd
 # [x] EM (R)
 # [x] KNN (sklearn)
 # [] ginn
-# [] vae 
+# [] vae
 # [x] gain
 # [x] dimv
 # [] pipeline with Makefile; addding try catch if running multilple algorithm
@@ -52,7 +58,7 @@ def softimpute_imputer(X, **kwargs):
     return Ximp, duration
 
 
-def mice_imputer(X, **kwargs):  
+def mice_imputer(X, **kwargs):
     from sklearn.experimental import enable_iterative_imputer
     from sklearn.impute import IterativeImputer, KNNImputer
 
@@ -185,7 +191,7 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
     )
     print("Input Shape", X.shape)
     mmask = np.isnan(X)
-    Ximp = X.copy() 
+    Ximp = X.copy()
     print("input shape", mmask.shape)
 
     impute_EM = SignatureTranslatedAnonymousPackage(rcode_string, "impute_EM")
@@ -204,9 +210,9 @@ def em_imputer(X, **kwargs):  # 70p -  1 iteration
 
 
 def missforest_imputer(X, **kwargs):
-
     # this is for the package missingpy
     import sklearn.neighbors._base  # scikit-learn==1.1.2
+
     sys.modules["sklearn.neighbors.base"] = sklearn.neighbors._base
     from missingpy import MissForest
 
@@ -224,12 +230,13 @@ def missforest_imputer(X, **kwargs):
 
 
 def knn_imputer(X, **kwargs):
-
     from sklearn.impute import KNNImputer
 
     start = time.time()
 
-    imputer = KNNImputer(**kwargs)  # n_neighbors=5 # this should be read from cofig file
+    imputer = KNNImputer(
+        **kwargs
+    )  # n_neighbors=5 # this should be read from cofig file
     Ximp = imputer.fit_transform(X)
 
     end = time.time()
@@ -239,8 +246,8 @@ def knn_imputer(X, **kwargs):
 
 
 def gain_imputer(X, **kwargs):
-
     from includes.GAIN.gain import gain
+
     # return gain(X, self.gain_params);
 
     start = time.time()
@@ -253,41 +260,89 @@ def gain_imputer(X, **kwargs):
     return Ximp, duration
 
 
+def vae_imputer(Xmiss, **kwargs):
+    # print(Xmiss).shape
+    # Xmiss = [sample for sample in Xmiss]
+    t0 = time.time()
+    X_train, X_valid = train_test_split(Xmiss, test_size=0.2)
+
+    # reshape into image
+    X_train = X_train.reshape((-1, 28, 28, 1))
+    X_valid = X_valid.reshape((-1, 28, 28, 1))
+
+    train_ds = generate_dataset("MNIST", X_train, None, 32)
+    valid_ds = generate_dataset("MNIST", X_valid, None, 32)
+
+    # Fitting data
+    model, get_inputs = train(
+        run=1,
+        method="Zero Imputation",
+        train_ds=train_ds,
+        valid_ds=valid_ds,
+        ds_name="MNIST",
+        z_dim=50,
+        likelihood="BERNOULLI",
+        mixture_components=1,
+    )
+
+    print("[+] Inference step")
+    Xmiss = Xmiss.reshape((-1, 28, 28, 1))
+    Xmiss = generate_dataset("MNIST", Xmiss, None, 32, infer=True)
+
+    results = []
+    for example in Xmiss:
+        inputs, decoder_b = get_inputs(example)
+        (x_logits, scale_logit, pi_logit), q_z, _ = model(inputs, decoder_b)
+
+        x_pred = tf.nn.sigmoid(x_logits)
+        x_pred = x_pred.numpy()
+        results.append(x_pred)
+
+    results = np.concatenate(results, axis=0)
+    t0 = time.time() - t0
+
+    return results, t0
+
+
 def ginn_imputer(X, **kwargs):
-    from inclues.ginn import ginn_run 
-    
+    from inclues.ginn import ginn_run
+
     start = time.time()
     Ximp = ginn_run(X, y)
-    duration = time.time() - start 
-    return Ximp, duration 
+    duration = time.time() - start
+    return Ximp, duration
 
-def vae_imputer(X, **kwargs):
-    
-    pass 
 
 def dimv_imputer(X, **kwargs):
-    print("kwargs", kwargs)
-    print("X.shape", X.shape) 
-
+    print("X.shape", X.shape)
     n_jobs = kwargs.get("n_jobs")
     train_percent = kwargs.get("train_percent")
-    initalizing = kwargs.get("initializing")  
-    
+    initalizing = kwargs.get("initializing")
+
     from DIMVImputation import DIMVImputation
-    
-    start = time.time() 
+
+    start = time.time()
     imputer = DIMVImputation()
     print("initializing", initalizing)
 
-    imputer.fit(X, n_jobs = n_jobs, initializing=initalizing)
+    imputer.fit(X, n_jobs=n_jobs, initializing=initalizing)
 
-    #run cross validation 
-    best_alpha = imputer.cross_validate(\
-            train_percent = train_percent)
-    print("Alpha choosen after CV: {} with scores {} ".format(
-        imputer.best_alpha, imputer.cv_score))
+    # run cross validation
+    best_alpha = imputer.cross_validate(train_percent=train_percent)
+    print(
+        "Alpha choosen after CV: {} with scores {} ".format(
+            imputer.best_alpha, imputer.cv_score
+        )
+    )
 
-    Ximp = imputer.transform(X, alpha = best_alpha)            
-    duration = time.time() - start 
-    return Ximp, duration 
+    # run cross validation
+    best_alpha = imputer.cross_validate(train_percent=train_percent)
+    print(
+        "Alpha choosen after CV: {} with scores {} ".format(
+            imputer.best_alpha, imputer.cv_score
+        )
+    )
 
+    Ximp = imputer.transform(X, alpha=best_alpha)
+    duration = time.time() - start
+    return Ximp, duration
