@@ -5,7 +5,6 @@ import sys
 import numpy as np
 import yaml
 
-<<<<<<< Updated upstream
 ROOT = os.environ.get("ROOT")
 sys.path.append(ROOT)
 from src.utils import get_directory
@@ -17,6 +16,7 @@ def hyperparameters(algo):
         cfg = yaml.safe_load(f)
 
     return cfg["hyper"]["rand"][algo]
+
 
 sys.path.append("")
 
@@ -55,6 +55,7 @@ def get_save_path(ds_name, mrate, exp_num, stage):
                          exp_num=exp_num)
 
     return _dir
+
 
 def impute(
     algo,
@@ -179,8 +180,6 @@ if __name__ == "__main__":
                         default=[i * .1 for i in range(1, 10)])
     parser.add_argument("--dryrun", type=int, default=0)
     parser.add_argument("--exp_num", type=int, default=None)
-
-
 
     print(args.missing_rates)
     if isinstance(args.missing_rates, str):
