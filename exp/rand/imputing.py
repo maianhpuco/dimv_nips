@@ -75,7 +75,6 @@ def impute(
         missing_dir = get_save_path(ds_name, mrate, exp_num, "missing")
 
         X_gtruth, y_gtruth = load_data(ds_name)
-        print("X shape", X_gtruth.shape)
         if dryrun == 1:
             X_gtruth, y_gtruth = X_gtruth[
                 :1000,
@@ -84,7 +83,6 @@ def impute(
         X_miss_path = os.path.join(missing_dir, "Xmiss.npz")
 
         Xmiss = np.load(X_miss_path)['arr_0']
-        print("X_miss.shape", Xmiss.shape)
         if dryrun == 1:
             Xmiss = Xmiss[
                 :1000,

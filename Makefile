@@ -21,7 +21,7 @@ DRYRUN = 0
 
 mono_missing:
 	for one_ds in $(DATAS); do\
-		ROOT=$${PWD} python3 exp/rand/missing.py --ds $$one_ds ;\
+		ROOT=$${PWD} python3 exp/mono/missing.py --ds $$one_ds ;\
 	done 
 
 rand_missing:
