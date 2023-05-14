@@ -67,8 +67,7 @@ class Encoder(tf.keras.layers.Layer):
                         data_format="channels_last",
                         input_shape=input_shape,
                         padding="SAME",
-                    )
-                )
+                    ))
             else:
                 self.conv_layers.append(
                     tf.keras.layers.Conv2D(
@@ -78,11 +77,11 @@ class Encoder(tf.keras.layers.Layer):
                         activation=tf.nn.relu,
                         data_format="channels_last",
                         padding="SAME",
-                    )
-                )
+                    ))
 
         self.mu_proj = tf.keras.layers.Dense(Z_DIM, activation=None)
-        self.sigma_proj = tf.keras.layers.Dense(Z_DIM, activation=tf.math.softplus)
+        self.sigma_proj = tf.keras.layers.Dense(Z_DIM,
+                                                activation=tf.math.softplus)
 
     def call(self, x):
         """Computes the forward pass through the Encoder.
@@ -115,14 +114,16 @@ class Decoder(tf.keras.layers.Layer):
         super(Decoder, self).__init__()
 
         if DATASET == "MNIST":
-            self.dense = tf.keras.layers.Dense(7 * 7 * 20, activation=tf.nn.relu)
+            self.dense = tf.keras.layers.Dense(7 * 7 * 20,
+                                               activation=tf.nn.relu)
             self.reshape_shape = [-1, 7, 7, 20]
             decoder_layers = [(40, 5, 2), (20, 5, 2)]
             fine_tune_layers = [(10, 5, 1), (10, 5, 1)]
             assert LIKELIHOOD == "BERNOULLI"
             last_layer = (1, 3, 1)
         else:
-            self.dense = tf.keras.layers.Dense(4 * 4 * 60, activation=tf.nn.relu)
+            self.dense = tf.keras.layers.Dense(4 * 4 * 60,
+                                               activation=tf.nn.relu)
             self.reshape_shape = [-1, 4, 4, 60]
             decoder_layers = [(60, 3, 2), (60, 3, 2), (40, 5, 2)]
             fine_tune_layers = [(30, 5, 1), (30, 5, 1)]
@@ -141,11 +142,11 @@ class Decoder(tf.keras.layers.Layer):
                     activation=tf.nn.relu,
                     data_format="channels_last",
                     padding="SAME",
-                )
-            )
+                ))
 
         self.fine_tune_layers = []
-        for i, (num_filters, kernel_size, strides) in enumerate(fine_tune_layers):
+        for i, (num_filters, kernel_size,
+                strides) in enumerate(fine_tune_layers):
             self.fine_tune_layers.append(
                 tf.keras.layers.Conv2D(
                     num_filters,
@@ -154,8 +155,7 @@ class Decoder(tf.keras.layers.Layer):
                     activation=tf.nn.relu,
                     data_format="channels_last",
                     padding="SAME",
-                )
-            )
+                ))
 
         self.last_layer = tf.keras.layers.Conv2D(
             last_layer[0],
@@ -196,25 +196,20 @@ class Decoder(tf.keras.layers.Layer):
             img_channels = 3
             k = LOGISTIC_MIXTURE_COMPONENTS
             for i in range(img_channels):
-                mean_logit.append(x[:, :, :, i * k : (i + 1) * k])
-                scale_logit.append(
-                    x[
-                        :,
-                        :,
-                        :,
-                        (img_channels * k + i * k) : (img_channels * k + (i + 1) * k),
-                    ]
-                )
-                pi_logit.append(
-                    x[
-                        :,
-                        :,
-                        :,
-                        (2 * img_channels * k + i * k) : (
-                            2 * img_channels * k + (i + 1) * k
-                        ),
-                    ]
-                )
+                mean_logit.append(x[:, :, :, i * k:(i + 1) * k])
+                scale_logit.append(x[
+                    :,
+                    :,
+                    :,
+                    (img_channels * k + i * k):(img_channels * k + (i + 1) * k),
+                ])
+                pi_logit.append(x[
+                    :,
+                    :,
+                    :,
+                    (2 * img_channels * k + i * k):(2 * img_channels * k +
+                                                    (i + 1) * k),
+                ])
         else:
             mean_logit = x
             scale_logit = None
@@ -224,6 +219,7 @@ class Decoder(tf.keras.layers.Layer):
 
 
 class VAE(tf.keras.Model):
+
     def __init__(self, input_shape):
         super(VAE, self).__init__()
         self.encoder = Encoder(input_shape)
@@ -239,10 +235,7 @@ class VAE(tf.keras.Model):
 
 # --------------------------------------------------
 # Training function
-def train(
-        run: int,
-        METHOD: str
-        ):
+def train(run: int, METHOD: str):
     tf.random.set_seed(run)
     np.random.seed(run)
     random.seed(run)
@@ -250,13 +243,12 @@ def train(
     print(run, METHOD)
 
     # Setting up metrics & optmizer
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.legacy.Adam()
 
     train_kl_metric = tf.keras.metrics.Mean(name="train_kl")
     train_log_prob_metric = tf.keras.metrics.Mean(name="train_log_prob")
     train_imputation_log_prob_metric = tf.keras.metrics.Mean(
-        name="train_imputation_log_prob"
-    )
+        name="train_imputation_log_prob")
     train_elbo_metric = tf.keras.metrics.Mean(name="train_elbo")
     train_mse_xo_metric = tf.keras.metrics.Mean(name="train_mse_xo")
     train_mse_xm_metric = tf.keras.metrics.Mean(name="train_mse_xm")
@@ -264,8 +256,7 @@ def train(
     valid_kl_metric = tf.keras.metrics.Mean(name="valid_kl")
     valid_log_prob_metric = tf.keras.metrics.Mean(name="valid_log_prob")
     valid_imputation_log_prob_metric = tf.keras.metrics.Mean(
-        name="valid_imputation_log_prob"
-    )
+        name="valid_imputation_log_prob")
     valid_elbo_metric = tf.keras.metrics.Mean(name="valid_elbo")
     valid_mse_xo_metric = tf.keras.metrics.Mean(name="valid_mse_xo")
     valid_mse_xm_metric = tf.keras.metrics.Mean(name="valid_mse_xm")
@@ -273,13 +264,13 @@ def train(
     test_kl_metric = tf.keras.metrics.Mean(name="test_kl")
     test_log_prob_metric = tf.keras.metrics.Mean(name="test_log_prob")
     test_imputation_log_prob_metric = tf.keras.metrics.Mean(
-        name="test_imputation_log_prob"
-    )
+        name="test_imputation_log_prob")
     test_elbo_metric = tf.keras.metrics.Mean(name="test_elbo")
     test_mse_xo_metric = tf.keras.metrics.Mean(name="test_mse_xo")
     test_mse_xm_metric = tf.keras.metrics.Mean(name="test_mse_xm")
     test_marginal_ll_metric = tf.keras.metrics.Mean(name="test_marginal_ll")
-    test_bits_per_pixel_metric = tf.keras.metrics.Mean(name="test_bits_per_pixel")
+    test_bits_per_pixel_metric = tf.keras.metrics.Mean(
+        name="test_bits_per_pixel")
 
     @tf.function
     def train_step(x, b, inputs, decoder_b, model):
@@ -287,8 +278,7 @@ def train(
         with tf.GradientTape() as tape:
             (x_logits, scale_logit, pi_logit), q_z, _ = model(inputs, decoder_b)
             loss_value, x_pred, log_prob, imputation_log_prob, kl = loss_fn(
-                q_z, x, b, x_logits, scale_logit, pi_logit
-            )
+                q_z, x, b, x_logits, scale_logit, pi_logit)
 
         grads = tape.gradient(loss_value, model.trainable_weights)
         grads, _ = tf.clip_by_global_norm(grads, 2.5)
@@ -306,10 +296,10 @@ def train(
     @tf.function
     def eval_step(x, b, inputs, decoder_b, model, validation_set=False):
         """Get model predictions for one batch and update metrics."""
-        (x_logits, scale_logit, pi_logit), q_z, z_sample = model(inputs, decoder_b)
+        (x_logits, scale_logit,
+         pi_logit), q_z, z_sample = model(inputs, decoder_b)
         loss_value, x_pred, log_prob, imputation_log_prob, kl = loss_fn(
-            q_z, x, b, x_logits, scale_logit, pi_logit
-        )
+            q_z, x, b, x_logits, scale_logit, pi_logit)
 
         mse_xo, mse_xm = compute_mse(b, x, x_pred)
 
@@ -329,8 +319,7 @@ def train(
             test_mse_xm_metric(mse_xm)
 
             marginal_ll, bits_per_pixel = compute_marginal_likelihood_estimate(
-                z_sample, q_z, x, b, x_logits, scale_logit, pi_logit
-            )
+                z_sample, q_z, x, b, x_logits, scale_logit, pi_logit)
             test_marginal_ll_metric(marginal_ll)
             test_bits_per_pixel_metric(bits_per_pixel)
 
@@ -365,7 +354,7 @@ def train(
     if os.path.exists(saved_model_loc):
         os.remove(saved_model_loc)
 
-    for epoch in range(200):
+    for epoch in range(50):
         for example in train_ds:
             inputs, decoder_b = get_inputs(example)
             train_step(example["x"], example["b"], inputs, decoder_b, model)
@@ -378,12 +367,10 @@ def train(
         mse_xm = train_mse_xm_metric.result().numpy()
 
         if VERBOSE:
-            print(
-                f"Train set evaluation epoch: {epoch} - "
-                f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-                f"imp log prob: {imputation_log_prob}, "
-                f"mse_xo {mse_xo}, mse_xm: {mse_xm}"
-            )
+            print(f"Train set evaluation epoch: {epoch} - "
+                  f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+                  f"imp log prob: {imputation_log_prob}, "
+                  f"mse_xo {mse_xo}, mse_xm: {mse_xm}")
 
         train_kl_metric.reset_states()
         train_log_prob_metric.reset_states()
@@ -411,12 +398,10 @@ def train(
         mse_xm = valid_mse_xm_metric.result().numpy()
 
         if VERBOSE:
-            print(
-                f"Valid set evaluation epoch: {epoch} - "
-                f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-                f"imp log prob: {imputation_log_prob}, "
-                f"mse_xo {mse_xo}, mse_xm: {mse_xm}"
-            )
+            print(f"Valid set evaluation epoch: {epoch} - "
+                  f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+                  f"imp log prob: {imputation_log_prob}, "
+                  f"mse_xo {mse_xo}, mse_xm: {mse_xm}")
 
         valid_kl_metric.reset_states()
         valid_log_prob_metric.reset_states()
@@ -473,9 +458,10 @@ def train(
     z_test, y_test = gen_rep_learning_datasets(test_ds)
 
     # fit logistic classifier
-    classifier = LogisticRegression(
-        penalty="none", multi_class="multinomial", solver="lbfgs", max_iter=1000
-    )
+    classifier = LogisticRegression(penalty="none",
+                                    multi_class="multinomial",
+                                    solver="lbfgs",
+                                    max_iter=1000)
     classifier.fit(z_train, y_train)
     accuracy = classifier.score(z_test, y_test)
 
@@ -484,14 +470,12 @@ def train(
     classifier.fit(z_train, y_train)
     knn_accuracy = classifier.score(z_test, y_test)
 
-    print(
-        f"Test set evaluation epoch: {epoch} - "
-        f"bits per pixel: {bits_per_pixel}, marginal ll: {marginal_ll}, "
-        f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-        f"imp log prob: {imputation_log_prob}, "
-        f"mse_xo {mse_xo}, mse_xm: {mse_xm}, "
-        f"accuracy: {accuracy}, knn accuracy: {knn_accuracy}"
-    )
+    print(f"Test set evaluation epoch: {epoch} - "
+          f"bits per pixel: {bits_per_pixel}, marginal ll: {marginal_ll}, "
+          f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+          f"imp log prob: {imputation_log_prob}, "
+          f"mse_xo {mse_xo}, mse_xm: {mse_xm}, "
+          f"accuracy: {accuracy}, knn accuracy: {knn_accuracy}")
 
     metrics[METHOD]["kl"].append(kl)
     metrics[METHOD]["log_prob"].append(log_prob)
@@ -542,11 +526,11 @@ def log_probs(x, b, x_logits, scale_logit, pi_logit):
     if LIKELIHOOD == "BERNOULLI":
         # valid for even real valued MNIST: http://ruishu.io/2018/03/19/bernoulli-vae/
         log_prob_full = -1 * tf.nn.sigmoid_cross_entropy_with_logits(
-            labels=x, logits=x_logits
-        )
+            labels=x, logits=x_logits)
 
         log_prob = tf.reduce_sum(b * log_prob_full, axis=[3, 2, 1])
-        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full, axis=[3, 2, 1])
+        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full,
+                                            axis=[3, 2, 1])
     elif LIKELIHOOD == "LOGISTIC_MIXTURE":
         log_prob_full = []
         for i in range(img_channels):
@@ -588,27 +572,29 @@ def log_probs(x, b, x_logits, scale_logit, pi_logit):
             log_prob_full.append(log_sum_exp(log_prob_comp))
 
         log_prob_full = tf.concat(
-            [tf.expand_dims(log_prob_full[i], axis=3) for i in range(img_channels)],
+            [
+                tf.expand_dims(log_prob_full[i], axis=3)
+                for i in range(img_channels)
+            ],
             axis=3,
         )
 
         log_prob = tf.reduce_sum(b * log_prob_full, axis=[3, 2, 1])
-        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full, axis=[3, 2, 1])
+        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full,
+                                            axis=[3, 2, 1])
 
     return x_pred, log_prob, imputation_log_prob
 
 
 def compute_kl(q_z):
-    p_z = tfp.distributions.Normal(
-        loc=np.zeros(Z_DIM, dtype=np.float32), scale=np.ones(Z_DIM, dtype=np.float32)
-    )
+    p_z = tfp.distributions.Normal(loc=np.zeros(Z_DIM, dtype=np.float32),
+                                   scale=np.ones(Z_DIM, dtype=np.float32))
     return tf.reduce_mean(tf.reduce_sum(q_z.kl_divergence(p_z), axis=1))
 
 
 def loss_fn(q_z, x, b, x_logits, scale_logit, pi_logit):
-    x_pred, log_prob, imputation_log_prob = log_probs(
-        x, b, x_logits, scale_logit, pi_logit
-    )
+    x_pred, log_prob, imputation_log_prob = log_probs(x, b, x_logits,
+                                                      scale_logit, pi_logit)
     log_prob = tf.reduce_mean(log_prob)
     imputation_log_prob = tf.reduce_mean(imputation_log_prob)
     kl = compute_kl(q_z)
@@ -616,27 +602,26 @@ def loss_fn(q_z, x, b, x_logits, scale_logit, pi_logit):
 
 
 def compute_mse(b, x, x_pred):
-    sqe = (x - x_pred) ** 2
+    sqe = (x - x_pred)**2
     mse_xo = tf.reduce_sum(b * sqe) / tf.reduce_sum(b)
     mse_xm = tf.reduce_sum((1.0 - b) * sqe) / tf.reduce_sum(1.0 - b)
     return mse_xo, mse_xm
 
 
-def compute_marginal_likelihood_estimate(
-    z_sample, q_z, x, b, x_logits, scale_logit, pi_logit
-):
+def compute_marginal_likelihood_estimate(z_sample, q_z, x, b, x_logits,
+                                         scale_logit, pi_logit):
     # importance sampled estimate of the marginal likelihood
     _, log_p_x_given_z, _ = log_probs(x, b, x_logits, scale_logit, pi_logit)
 
-    p_z = tfp.distributions.Normal(
-        loc=np.zeros(Z_DIM, dtype=np.float32), scale=np.ones(Z_DIM, dtype=np.float32)
-    )
+    p_z = tfp.distributions.Normal(loc=np.zeros(Z_DIM, dtype=np.float32),
+                                   scale=np.ones(Z_DIM, dtype=np.float32))
     log_p_z = tf.reduce_sum(p_z.log_prob(z_sample), -1)
     log_q_z_given_x = tf.reduce_sum(q_z.log_prob(z_sample), -1)
 
     log_s = tf.math.log(tf.constant(NUM_IMPORTANCE_SAMPLES, tf.float32))
 
-    marginal_ll = log_sum_exp(log_p_x_given_z + log_p_z - log_q_z_given_x) - log_s
+    marginal_ll = log_sum_exp(log_p_x_given_z + log_p_z -
+                              log_q_z_given_x) - log_s
 
     ln_2 = tf.math.log(tf.constant(2.0, tf.float32))
     num_obs_pixels = tf.reduce_sum(b[0, :, :, 0])
@@ -662,8 +647,7 @@ metrics = {
         "bits_per_pixel": [],
         "accuracy": [],
         "knn_accuracy": [],
-    }
-    for METHOD in METHODS
+    } for METHOD in METHODS
 }
 
 # test code

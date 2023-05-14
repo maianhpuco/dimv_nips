@@ -95,18 +95,17 @@ def generate_missingness(dataset, x_mean):
                     b[x_min:x_max, y_min:y_max, :] = 0.0
         elif MISSINGNESS_TYPE == "MNAR" or MISSINGNESS_COMPLEXITY == "COMPLEX":
             if MISSINGNESS_TYPE == "MNAR":
-                missingness_block_size, num_missing_blocks = mnar_blocks[int(label)]
+                missingness_block_size, num_missing_blocks = mnar_blocks[int(
+                    label)]
             else:
                 idx = np.random.choice(len(mnar_blocks))
                 missingness_block_size, num_missing_blocks = mnar_blocks[idx]
 
             for _ in range(num_missing_blocks):
                 x = missingness_block_size // 2 + np.random.choice(
-                    img_dim - missingness_block_size
-                )
+                    img_dim - missingness_block_size)
                 y = missingness_block_size // 2 + np.random.choice(
-                    img_dim - missingness_block_size
-                )
+                    img_dim - missingness_block_size)
                 x_min = max(x - missingness_block_size // 2, 0)
                 x_max = min(x + missingness_block_size // 2, img_dim)
                 y_min = max(y - missingness_block_size // 2, 0)
@@ -121,15 +120,13 @@ def generate_missingness(dataset, x_mean):
         zero_imp_images.append(b * example["image"])
         mean_imp_images.append(b * example["image"] + (1.0 - b) * x_mean)
         labels.append(label)
-    return tf.data.Dataset.from_tensor_slices(
-        {
-            "x": images,
-            "x_zero_imp": zero_imp_images,
-            "b": masks,
-            "x_mean_imp": mean_imp_images,
-            "y": labels,
-        }
-    )
+    return tf.data.Dataset.from_tensor_slices({
+        "x": images,
+        "x_zero_imp": zero_imp_images,
+        "b": masks,
+        "x_mean_imp": mean_imp_images,
+        "y": labels,
+    })
 
 
 def cast_img(example):
@@ -153,32 +150,27 @@ def generate_datasets():
     train_ds = tfds.as_numpy(train_ds)
     train_ds = [example for example in train_ds]
     train_ds, valid_ds = train_test_split(
-        train_ds, train_size=50000 if DATASET == "MNIST" else 63257, test_size=10000
-    )
+        train_ds,
+        train_size=50000 if DATASET == "MNIST" else 63257,
+        test_size=10000)
 
     test_ds = tfds.as_numpy(test_ds)
     test_ds = [example for example in test_ds]
 
-    x_mean = np.mean(np.asarray([example["image"] for example in train_ds]), axis=0)
+    x_mean = np.mean(np.asarray([example["image"] for example in train_ds]),
+                     axis=0)
 
     train_ds = generate_missingness(train_ds, x_mean)
     valid_ds = generate_missingness(valid_ds, x_mean)
     test_ds = generate_missingness(test_ds, x_mean)
 
     train_ds = (
-        train_ds.map(cast_img)
-        .shuffle(10000)
-        .batch(BATCH_SIZE)
-        .prefetch(tf.data.experimental.AUTOTUNE)
-    )
-    valid_ds = (
-        valid_ds.map(cast_img).batch(BATCH_SIZE).prefetch(tf.data.experimental.AUTOTUNE)
-    )
-    test_ds = (
-        test_ds.map(cast_img)
-        .batch(TEST_BATCH_SIZE)
-        .prefetch(tf.data.experimental.AUTOTUNE)
-    )
+        train_ds.map(cast_img).shuffle(10000).batch(BATCH_SIZE).prefetch(
+            tf.data.experimental.AUTOTUNE))
+    valid_ds = (valid_ds.map(cast_img).batch(BATCH_SIZE).prefetch(
+        tf.data.experimental.AUTOTUNE))
+    test_ds = (test_ds.map(cast_img).batch(TEST_BATCH_SIZE).prefetch(
+        tf.data.experimental.AUTOTUNE))
     return train_ds, valid_ds, test_ds
 
 
@@ -270,8 +262,7 @@ class Encoder(tf.keras.layers.Layer):
                         data_format="channels_last",
                         input_shape=input_shape,
                         padding="SAME",
-                    )
-                )
+                    ))
             else:
                 self.conv_layers.append(
                     tf.keras.layers.Conv2D(
@@ -281,11 +272,11 @@ class Encoder(tf.keras.layers.Layer):
                         activation=tf.nn.relu,
                         data_format="channels_last",
                         padding="SAME",
-                    )
-                )
+                    ))
 
         self.mu_proj = tf.keras.layers.Dense(Z_DIM, activation=None)
-        self.sigma_proj = tf.keras.layers.Dense(Z_DIM, activation=tf.math.softplus)
+        self.sigma_proj = tf.keras.layers.Dense(Z_DIM,
+                                                activation=tf.math.softplus)
 
     def call(self, x):
         """Computes the forward pass through the Encoder.
@@ -318,14 +309,16 @@ class Decoder(tf.keras.layers.Layer):
         super(Decoder, self).__init__()
 
         if DATASET == "MNIST":
-            self.dense = tf.keras.layers.Dense(7 * 7 * 20, activation=tf.nn.relu)
+            self.dense = tf.keras.layers.Dense(7 * 7 * 20,
+                                               activation=tf.nn.relu)
             self.reshape_shape = [-1, 7, 7, 20]
             decoder_layers = [(40, 5, 2), (20, 5, 2)]
             fine_tune_layers = [(10, 5, 1), (10, 5, 1)]
             assert LIKELIHOOD == "BERNOULLI"
             last_layer = (1, 3, 1)
         else:
-            self.dense = tf.keras.layers.Dense(4 * 4 * 60, activation=tf.nn.relu)
+            self.dense = tf.keras.layers.Dense(4 * 4 * 60,
+                                               activation=tf.nn.relu)
             self.reshape_shape = [-1, 4, 4, 60]
             decoder_layers = [(60, 3, 2), (60, 3, 2), (40, 5, 2)]
             fine_tune_layers = [(30, 5, 1), (30, 5, 1)]
@@ -344,11 +337,11 @@ class Decoder(tf.keras.layers.Layer):
                     activation=tf.nn.relu,
                     data_format="channels_last",
                     padding="SAME",
-                )
-            )
+                ))
 
         self.fine_tune_layers = []
-        for i, (num_filters, kernel_size, strides) in enumerate(fine_tune_layers):
+        for i, (num_filters, kernel_size,
+                strides) in enumerate(fine_tune_layers):
             self.fine_tune_layers.append(
                 tf.keras.layers.Conv2D(
                     num_filters,
@@ -357,8 +350,7 @@ class Decoder(tf.keras.layers.Layer):
                     activation=tf.nn.relu,
                     data_format="channels_last",
                     padding="SAME",
-                )
-            )
+                ))
 
         self.last_layer = tf.keras.layers.Conv2D(
             last_layer[0],
@@ -399,25 +391,20 @@ class Decoder(tf.keras.layers.Layer):
             img_channels = 3
             k = LOGISTIC_MIXTURE_COMPONENTS
             for i in range(img_channels):
-                mean_logit.append(x[:, :, :, i * k : (i + 1) * k])
-                scale_logit.append(
-                    x[
-                        :,
-                        :,
-                        :,
-                        (img_channels * k + i * k) : (img_channels * k + (i + 1) * k),
-                    ]
-                )
-                pi_logit.append(
-                    x[
-                        :,
-                        :,
-                        :,
-                        (2 * img_channels * k + i * k) : (
-                            2 * img_channels * k + (i + 1) * k
-                        ),
-                    ]
-                )
+                mean_logit.append(x[:, :, :, i * k:(i + 1) * k])
+                scale_logit.append(x[
+                    :,
+                    :,
+                    :,
+                    (img_channels * k + i * k):(img_channels * k + (i + 1) * k),
+                ])
+                pi_logit.append(x[
+                    :,
+                    :,
+                    :,
+                    (2 * img_channels * k + i * k):(2 * img_channels * k +
+                                                    (i + 1) * k),
+                ])
         else:
             mean_logit = x
             scale_logit = None
@@ -427,6 +414,7 @@ class Decoder(tf.keras.layers.Layer):
 
 
 class VAE(tf.keras.Model):
+
     def __init__(self, input_shape):
         super(VAE, self).__init__()
         self.encoder = Encoder(input_shape)
@@ -476,11 +464,11 @@ def log_probs(x, b, x_logits, scale_logit, pi_logit):
     if LIKELIHOOD == "BERNOULLI":
         # valid for even real valued MNIST: http://ruishu.io/2018/03/19/bernoulli-vae/
         log_prob_full = -1 * tf.nn.sigmoid_cross_entropy_with_logits(
-            labels=x, logits=x_logits
-        )
+            labels=x, logits=x_logits)
 
         log_prob = tf.reduce_sum(b * log_prob_full, axis=[3, 2, 1])
-        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full, axis=[3, 2, 1])
+        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full,
+                                            axis=[3, 2, 1])
     elif LIKELIHOOD == "LOGISTIC_MIXTURE":
         log_prob_full = []
         for i in range(img_channels):
@@ -522,27 +510,29 @@ def log_probs(x, b, x_logits, scale_logit, pi_logit):
             log_prob_full.append(log_sum_exp(log_prob_comp))
 
         log_prob_full = tf.concat(
-            [tf.expand_dims(log_prob_full[i], axis=3) for i in range(img_channels)],
+            [
+                tf.expand_dims(log_prob_full[i], axis=3)
+                for i in range(img_channels)
+            ],
             axis=3,
         )
 
         log_prob = tf.reduce_sum(b * log_prob_full, axis=[3, 2, 1])
-        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full, axis=[3, 2, 1])
+        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full,
+                                            axis=[3, 2, 1])
 
     return x_pred, log_prob, imputation_log_prob
 
 
 def compute_kl(q_z):
-    p_z = tfp.distributions.Normal(
-        loc=np.zeros(Z_DIM, dtype=np.float32), scale=np.ones(Z_DIM, dtype=np.float32)
-    )
+    p_z = tfp.distributions.Normal(loc=np.zeros(Z_DIM, dtype=np.float32),
+                                   scale=np.ones(Z_DIM, dtype=np.float32))
     return tf.reduce_mean(tf.reduce_sum(q_z.kl_divergence(p_z), axis=1))
 
 
 def loss_fn(q_z, x, b, x_logits, scale_logit, pi_logit):
-    x_pred, log_prob, imputation_log_prob = log_probs(
-        x, b, x_logits, scale_logit, pi_logit
-    )
+    x_pred, log_prob, imputation_log_prob = log_probs(x, b, x_logits,
+                                                      scale_logit, pi_logit)
     log_prob = tf.reduce_mean(log_prob)
     imputation_log_prob = tf.reduce_mean(imputation_log_prob)
     kl = compute_kl(q_z)
@@ -550,27 +540,26 @@ def loss_fn(q_z, x, b, x_logits, scale_logit, pi_logit):
 
 
 def compute_mse(b, x, x_pred):
-    sqe = (x - x_pred) ** 2
+    sqe = (x - x_pred)**2
     mse_xo = tf.reduce_sum(b * sqe) / tf.reduce_sum(b)
     mse_xm = tf.reduce_sum((1.0 - b) * sqe) / tf.reduce_sum(1.0 - b)
     return mse_xo, mse_xm
 
 
-def compute_marginal_likelihood_estimate(
-    z_sample, q_z, x, b, x_logits, scale_logit, pi_logit
-):
+def compute_marginal_likelihood_estimate(z_sample, q_z, x, b, x_logits,
+                                         scale_logit, pi_logit):
     # importance sampled estimate of the marginal likelihood
     _, log_p_x_given_z, _ = log_probs(x, b, x_logits, scale_logit, pi_logit)
 
-    p_z = tfp.distributions.Normal(
-        loc=np.zeros(Z_DIM, dtype=np.float32), scale=np.ones(Z_DIM, dtype=np.float32)
-    )
+    p_z = tfp.distributions.Normal(loc=np.zeros(Z_DIM, dtype=np.float32),
+                                   scale=np.ones(Z_DIM, dtype=np.float32))
     log_p_z = tf.reduce_sum(p_z.log_prob(z_sample), -1)
     log_q_z_given_x = tf.reduce_sum(q_z.log_prob(z_sample), -1)
 
     log_s = tf.math.log(tf.constant(NUM_IMPORTANCE_SAMPLES, tf.float32))
 
-    marginal_ll = log_sum_exp(log_p_x_given_z + log_p_z - log_q_z_given_x) - log_s
+    marginal_ll = log_sum_exp(log_p_x_given_z + log_p_z -
+                              log_q_z_given_x) - log_s
 
     ln_2 = tf.math.log(tf.constant(2.0, tf.float32))
     num_obs_pixels = tf.reduce_sum(b[0, :, :, 0])
@@ -596,8 +585,7 @@ metrics = {
         "bits_per_pixel": [],
         "accuracy": [],
         "knn_accuracy": [],
-    }
-    for METHOD in METHODS
+    } for METHOD in METHODS
 }
 
 for run in range(NUM_RUNS):
@@ -608,13 +596,13 @@ for run in range(NUM_RUNS):
         random.seed(run)
 
         print(run, METHOD)
-        optimizer = tf.keras.optimizers.Adam()
+        #optimizer = tf.keras.optimizers.Adam()
+        optimizer = tf.keras.optimizers.legacy.Adam()
 
         train_kl_metric = tf.keras.metrics.Mean(name="train_kl")
         train_log_prob_metric = tf.keras.metrics.Mean(name="train_log_prob")
         train_imputation_log_prob_metric = tf.keras.metrics.Mean(
-            name="train_imputation_log_prob"
-        )
+            name="train_imputation_log_prob")
         train_elbo_metric = tf.keras.metrics.Mean(name="train_elbo")
         train_mse_xo_metric = tf.keras.metrics.Mean(name="train_mse_xo")
         train_mse_xm_metric = tf.keras.metrics.Mean(name="train_mse_xm")
@@ -622,8 +610,7 @@ for run in range(NUM_RUNS):
         valid_kl_metric = tf.keras.metrics.Mean(name="valid_kl")
         valid_log_prob_metric = tf.keras.metrics.Mean(name="valid_log_prob")
         valid_imputation_log_prob_metric = tf.keras.metrics.Mean(
-            name="valid_imputation_log_prob"
-        )
+            name="valid_imputation_log_prob")
         valid_elbo_metric = tf.keras.metrics.Mean(name="valid_elbo")
         valid_mse_xo_metric = tf.keras.metrics.Mean(name="valid_mse_xo")
         valid_mse_xm_metric = tf.keras.metrics.Mean(name="valid_mse_xm")
@@ -631,22 +618,22 @@ for run in range(NUM_RUNS):
         test_kl_metric = tf.keras.metrics.Mean(name="test_kl")
         test_log_prob_metric = tf.keras.metrics.Mean(name="test_log_prob")
         test_imputation_log_prob_metric = tf.keras.metrics.Mean(
-            name="test_imputation_log_prob"
-        )
+            name="test_imputation_log_prob")
         test_elbo_metric = tf.keras.metrics.Mean(name="test_elbo")
         test_mse_xo_metric = tf.keras.metrics.Mean(name="test_mse_xo")
         test_mse_xm_metric = tf.keras.metrics.Mean(name="test_mse_xm")
         test_marginal_ll_metric = tf.keras.metrics.Mean(name="test_marginal_ll")
-        test_bits_per_pixel_metric = tf.keras.metrics.Mean(name="test_bits_per_pixel")
+        test_bits_per_pixel_metric = tf.keras.metrics.Mean(
+            name="test_bits_per_pixel")
 
         @tf.function
         def train_step(x, b, inputs, decoder_b, model):
             """Defines a single training step: Update weights based on one batch."""
             with tf.GradientTape() as tape:
-                (x_logits, scale_logit, pi_logit), q_z, _ = model(inputs, decoder_b)
+                (x_logits, scale_logit,
+                 pi_logit), q_z, _ = model(inputs, decoder_b)
                 loss_value, x_pred, log_prob, imputation_log_prob, kl = loss_fn(
-                    q_z, x, b, x_logits, scale_logit, pi_logit
-                )
+                    q_z, x, b, x_logits, scale_logit, pi_logit)
 
             grads = tape.gradient(loss_value, model.trainable_weights)
             grads, _ = tf.clip_by_global_norm(grads, 2.5)
@@ -664,10 +651,10 @@ for run in range(NUM_RUNS):
         @tf.function
         def eval_step(x, b, inputs, decoder_b, model, validation_set=False):
             """Get model predictions for one batch and update metrics."""
-            (x_logits, scale_logit, pi_logit), q_z, z_sample = model(inputs, decoder_b)
+            (x_logits, scale_logit,
+             pi_logit), q_z, z_sample = model(inputs, decoder_b)
             loss_value, x_pred, log_prob, imputation_log_prob, kl = loss_fn(
-                q_z, x, b, x_logits, scale_logit, pi_logit
-            )
+                q_z, x, b, x_logits, scale_logit, pi_logit)
 
             mse_xo, mse_xm = compute_mse(b, x, x_pred)
 
@@ -687,8 +674,7 @@ for run in range(NUM_RUNS):
                 test_mse_xm_metric(mse_xm)
 
                 marginal_ll, bits_per_pixel = compute_marginal_likelihood_estimate(
-                    z_sample, q_z, x, b, x_logits, scale_logit, pi_logit
-                )
+                    z_sample, q_z, x, b, x_logits, scale_logit, pi_logit)
                 test_marginal_ll_metric(marginal_ll)
                 test_bits_per_pixel_metric(bits_per_pixel)
 
@@ -723,25 +709,24 @@ for run in range(NUM_RUNS):
         if os.path.exists(saved_model_loc):
             os.remove(saved_model_loc)
 
-        for epoch in range(200):
+        for epoch in range(50):
             for example in train_ds:
                 inputs, decoder_b = get_inputs(example)
                 train_step(example["x"], example["b"], inputs, decoder_b, model)
 
             kl = train_kl_metric.result().numpy()
             log_prob = train_log_prob_metric.result().numpy()
-            imputation_log_prob = train_imputation_log_prob_metric.result().numpy()
+            imputation_log_prob = train_imputation_log_prob_metric.result(
+            ).numpy()
             elbo = train_elbo_metric.result().numpy()
             mse_xo = train_mse_xo_metric.result().numpy()
             mse_xm = train_mse_xm_metric.result().numpy()
 
             if VERBOSE:
-                print(
-                    f"Train set evaluation epoch: {epoch} - "
-                    f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-                    f"imp log prob: {imputation_log_prob}, "
-                    f"mse_xo {mse_xo}, mse_xm: {mse_xm}"
-                )
+                print(f"Train set evaluation epoch: {epoch} - "
+                      f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+                      f"imp log prob: {imputation_log_prob}, "
+                      f"mse_xo {mse_xo}, mse_xm: {mse_xm}")
 
             train_kl_metric.reset_states()
             train_log_prob_metric.reset_states()
@@ -763,18 +748,17 @@ for run in range(NUM_RUNS):
 
             kl = valid_kl_metric.result().numpy()
             log_prob = valid_log_prob_metric.result().numpy()
-            imputation_log_prob = valid_imputation_log_prob_metric.result().numpy()
+            imputation_log_prob = valid_imputation_log_prob_metric.result(
+            ).numpy()
             elbo = valid_elbo_metric.result().numpy()
             mse_xo = valid_mse_xo_metric.result().numpy()
             mse_xm = valid_mse_xm_metric.result().numpy()
 
             if VERBOSE:
-                print(
-                    f"Valid set evaluation epoch: {epoch} - "
-                    f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-                    f"imp log prob: {imputation_log_prob}, "
-                    f"mse_xo {mse_xo}, mse_xm: {mse_xm}"
-                )
+                print(f"Valid set evaluation epoch: {epoch} - "
+                      f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+                      f"imp log prob: {imputation_log_prob}, "
+                      f"mse_xo {mse_xo}, mse_xm: {mse_xm}")
 
             valid_kl_metric.reset_states()
             valid_log_prob_metric.reset_states()
@@ -795,7 +779,9 @@ for run in range(NUM_RUNS):
         model.load_weights(saved_model_loc)
         for example in test_ds:
             for k in ["x", "x_zero_imp", "b", "x_mean_imp", "y"]:
-                example[k] = tf.repeat(example[k], NUM_IMPORTANCE_SAMPLES, axis=0)
+                example[k] = tf.repeat(example[k],
+                                       NUM_IMPORTANCE_SAMPLES,
+                                       axis=0)
             inputs, decoder_b = get_inputs(example)
             eval_step(
                 example["x"],
@@ -831,9 +817,10 @@ for run in range(NUM_RUNS):
         z_test, y_test = gen_rep_learning_datasets(test_ds)
 
         # fit logistic classifier
-        classifier = LogisticRegression(
-            penalty="none", multi_class="multinomial", solver="lbfgs", max_iter=1000
-        )
+        classifier = LogisticRegression(penalty="none",
+                                        multi_class="multinomial",
+                                        solver="lbfgs",
+                                        max_iter=1000)
         classifier.fit(z_train, y_train)
         accuracy = classifier.score(z_test, y_test)
 
@@ -842,14 +829,12 @@ for run in range(NUM_RUNS):
         classifier.fit(z_train, y_train)
         knn_accuracy = classifier.score(z_test, y_test)
 
-        print(
-            f"Test set evaluation epoch: {epoch} - "
-            f"bits per pixel: {bits_per_pixel}, marginal ll: {marginal_ll}, "
-            f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-            f"imp log prob: {imputation_log_prob}, "
-            f"mse_xo {mse_xo}, mse_xm: {mse_xm}, "
-            f"accuracy: {accuracy}, knn accuracy: {knn_accuracy}"
-        )
+        print(f"Test set evaluation epoch: {epoch} - "
+              f"bits per pixel: {bits_per_pixel}, marginal ll: {marginal_ll}, "
+              f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+              f"imp log prob: {imputation_log_prob}, "
+              f"mse_xo {mse_xo}, mse_xm: {mse_xm}, "
+              f"accuracy: {accuracy}, knn accuracy: {knn_accuracy}")
 
         metrics[METHOD]["kl"].append(kl)
         metrics[METHOD]["log_prob"].append(log_prob)
@@ -866,12 +851,10 @@ for run in range(NUM_RUNS):
         if VISUALIZE:
             for example in valid_ds.take(1):
                 inputs, decoder_b = get_inputs(example)
-                (x_logits, scale_logit, pi_logit), q_z, z_sample = model(
-                    inputs, decoder_b
-                )
-                _, x_pred, _, _, kl = loss_fn(
-                    q_z, example["x"], example["b"], x_logits, scale_logit, pi_logit
-                )
+                (x_logits, scale_logit,
+                 pi_logit), q_z, z_sample = model(inputs, decoder_b)
+                _, x_pred, _, _, kl = loss_fn(q_z, example["x"], example["b"],
+                                              x_logits, scale_logit, pi_logit)
 
                 for i in range(25):
                     print("Label:", example["y"][i])
@@ -888,12 +871,14 @@ for run in range(NUM_RUNS):
                         plt.show()
                         print("Image with zero imputation")
                         plt.figure(figsize=(1, 1))
-                        plt.imshow(np.squeeze(example["x_zero_imp"][i]), cmap="gray")
+                        plt.imshow(np.squeeze(example["x_zero_imp"][i]),
+                                   cmap="gray")
                         plt.axis("off")
                         plt.show()
                         print("Image with mean imputation")
                         plt.figure(figsize=(1, 1))
-                        plt.imshow(np.squeeze(example["x_mean_imp"][i]), cmap="gray")
+                        plt.imshow(np.squeeze(example["x_mean_imp"][i]),
+                                   cmap="gray")
                         plt.axis("off")
                         plt.show()
                         print("Mean reconstruction")
@@ -942,36 +927,34 @@ for METHOD in METHODS:
     bits_per_pixel = np.mean(metrics[METHOD]["bits_per_pixel"])
     accuracy = np.mean(metrics[METHOD]["accuracy"])
     knn_accuracy = np.mean(metrics[METHOD]["knn_accuracy"])
-    print(
-        f"Average test set metrics - "
-        f"bits per pixel: {bits_per_pixel}, marginal_ll: {marginal_ll}, "
-        f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-        f"imp log prob: {imputation_log_prob}, "
-        f"mse_xo {mse_xo}, mse_xm: {mse_xm}, "
-        f"accuracy: {accuracy}, knn accuracy: {knn_accuracy}"
-    )
+    print(f"Average test set metrics - "
+          f"bits per pixel: {bits_per_pixel}, marginal_ll: {marginal_ll}, "
+          f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+          f"imp log prob: {imputation_log_prob}, "
+          f"mse_xo {mse_xo}, mse_xm: {mse_xm}, "
+          f"accuracy: {accuracy}, knn accuracy: {knn_accuracy}")
 
     for metric in [
+            "imputation_log_prob",
+            "mse_xo",
+            "mse_xm",
+            "marginal_ll",
+            "bits_per_pixel",
+            "accuracy",
+            "knn_accuracy",
+    ]:
+        print(metric)
+        print(",".join(list(map(str, metrics[METHOD][metric]))))
+
+for metric in [
         "imputation_log_prob",
+        "elbo",
         "mse_xo",
         "mse_xm",
         "marginal_ll",
         "bits_per_pixel",
         "accuracy",
         "knn_accuracy",
-    ]:
-        print(metric)
-        print(",".join(list(map(str, metrics[METHOD][metric]))))
-
-for metric in [
-    "imputation_log_prob",
-    "elbo",
-    "mse_xo",
-    "mse_xm",
-    "marginal_ll",
-    "bits_per_pixel",
-    "accuracy",
-    "knn_accuracy",
 ]:
     print("-" * 30)
     print(metric)
@@ -979,7 +962,7 @@ for metric in [
     for METHOD_1 in METHODS:
         for METHOD_2 in METHODS:
             if METHOD_1 != METHOD_2:
-                p_value = stats.ttest_rel(
-                    metrics[METHOD_1][metric], metrics[METHOD_2][metric], axis=0
-                )[1]
+                p_value = stats.ttest_rel(metrics[METHOD_1][metric],
+                                          metrics[METHOD_2][metric],
+                                          axis=0)[1]
                 print(f"{METHOD_1} vs. {METHOD_2}: {p_value}")

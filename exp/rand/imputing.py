@@ -89,6 +89,7 @@ def impute(
                 :1000,
             ]
         print("X_miss.shape", Xmiss.shape)
+        mmask = np.isnan(Xmiss)
 
         try:
             hyperparams = get_hparams(algo)
@@ -152,8 +153,7 @@ def impute(
 
         save_folder = get_save_path(ds_name, mrate, exp_num, "exp")
 
-        mmask = np.isnan(Xmiss)
-        rmse = rmse_calc(X_gtruth, Ximp, mmask)
+                rmse = rmse_calc(X_gtruth, Ximp, mmask)
 
         print("Algorithm: {}, Total time: {}, RMSE: {} ".format(
             algo, duration, rmse))

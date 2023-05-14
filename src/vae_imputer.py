@@ -42,11 +42,7 @@ def vae_imputer(Xmiss, **kwargs):
     results = []
     for example in Xmiss:
         inputs, decoder_b = get_inputs(example)
-        (
-            x_logits,
-            scale_logit,
-            pi_logit
-        ), q_z, _ = model(inputs, decoder_b)
+        (x_logits, scale_logit, pi_logit), q_z, _ = model(inputs, decoder_b)
 
         x_pred = tf.nn.sigmoid(x_logits)
         x_pred = x_pred.numpy()

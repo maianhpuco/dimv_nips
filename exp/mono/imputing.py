@@ -77,7 +77,7 @@ def impute(
             X_miss = X_miss[
                 :1000,
             ]
-
+        mmask = np.isnan(X_miss)
         try:
             hyperparams = hyperparameters(algo)
 
@@ -137,7 +137,6 @@ def impute(
 
         save_folder = get_save_path(ds_name, mrate, exp_num, "exp")
 
-        mmask = np.isnan(X_miss)
         rmse = rmse_calc(X_gtruth, Ximp, mmask)
 
         print("Algorithm: {}, Total time: {}, RMSE: {} ".format(
@@ -164,7 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("--algo", type=str)
     parser.add_argument("--missing_rates", type=list, default=[0.4, 0.5, 0.6])
     parser.add_argument("--dryrun", type=int, default=0)
-    parser.add_argument("--exp_num", type=int, default=None)
+    parser.add_argument("--exp_num", type=int, default=0)
     parser.add_argument("--create_new_exp", type=int, default=None)
 
     args = parser.parse_args()

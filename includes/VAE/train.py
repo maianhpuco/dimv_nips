@@ -22,7 +22,8 @@ def log_sum_exp(x):
 
 
 # NOTE: adding likelihood paramenter
-def log_probs(x, b, x_logits, scale_logit, pi_logit, likelihood, mixture_components):
+def log_probs(x, b, x_logits, scale_logit, pi_logit, likelihood,
+              mixture_components):
     if likelihood == "BERNOULLI":
         x_pred = tf.nn.sigmoid(x_logits)
     elif likelihood == "LOGISTIC_MIXTURE":
@@ -50,11 +51,11 @@ def log_probs(x, b, x_logits, scale_logit, pi_logit, likelihood, mixture_compone
     if likelihood == "BERNOULLI":
         # valid for even real valued MNIST: http://ruishu.io/2018/03/19/bernoulli-vae/
         log_prob_full = -1 * tf.nn.sigmoid_cross_entropy_with_logits(
-            labels=x, logits=x_logits
-        )
+            labels=x, logits=x_logits)
 
         log_prob = tf.reduce_sum(b * log_prob_full, axis=[3, 2, 1])
-        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full, axis=[3, 2, 1])
+        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full,
+                                            axis=[3, 2, 1])
     elif likelihood == "LOGISTIC_MIXTURE":
         log_prob_full = []
         for i in range(img_channels):
@@ -96,38 +97,33 @@ def log_probs(x, b, x_logits, scale_logit, pi_logit, likelihood, mixture_compone
             log_prob_full.append(log_sum_exp(log_prob_comp))
 
         log_prob_full = tf.concat(
-            [tf.expand_dims(log_prob_full[i], axis=3) for i in range(img_channels)],
+            [
+                tf.expand_dims(log_prob_full[i], axis=3)
+                for i in range(img_channels)
+            ],
             axis=3,
         )
 
         log_prob = tf.reduce_sum(b * log_prob_full, axis=[3, 2, 1])
-        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full, axis=[3, 2, 1])
+        imputation_log_prob = tf.reduce_sum((1.0 - b) * log_prob_full,
+                                            axis=[3, 2, 1])
 
     return x_pred, log_prob, imputation_log_prob
 
 
 # NOTE: adding z_dim params
 def compute_kl(q_z, z_dim):
-    p_z = tfp.distributions.Normal(
-        loc=np.zeros(z_dim, dtype=np.float32), scale=np.ones(z_dim, dtype=np.float32)
-    )
+    p_z = tfp.distributions.Normal(loc=np.zeros(z_dim, dtype=np.float32),
+                                   scale=np.ones(z_dim, dtype=np.float32))
     return tf.reduce_mean(tf.reduce_sum(q_z.kl_divergence(p_z), axis=1))
 
 
-def loss_fn(q_z,
-            x,
-            b,
-            x_logits,
-            scale_logit,
-            pi_logit,
-            likelihood,
-            mixture_components,
-            z_dim):
-    x_pred, log_prob, imputation_log_prob = log_probs(
-        x, b, x_logits, scale_logit, pi_logit,
-        likelihood, mixture_components
-
-    )
+def loss_fn(q_z, x, b, x_logits, scale_logit, pi_logit, likelihood,
+            mixture_components, z_dim):
+    x_pred, log_prob, imputation_log_prob = log_probs(x, b, x_logits,
+                                                      scale_logit, pi_logit,
+                                                      likelihood,
+                                                      mixture_components)
     log_prob = tf.reduce_mean(log_prob)
     imputation_log_prob = tf.reduce_mean(imputation_log_prob)
     kl = compute_kl(q_z, z_dim)
@@ -135,27 +131,26 @@ def loss_fn(q_z,
 
 
 def compute_mse(b, x, x_pred):
-    sqe = (x - x_pred) ** 2
+    sqe = (x - x_pred)**2
     mse_xo = tf.reduce_sum(b * sqe) / tf.reduce_sum(b)
     mse_xm = tf.reduce_sum((1.0 - b) * sqe) / tf.reduce_sum(1.0 - b)
     return mse_xo, mse_xm
 
 
-def compute_marginal_likelihood_estimate(
-    z_sample, q_z, x, b, x_logits, scale_logit, pi_logit, z_dim
-):
+def compute_marginal_likelihood_estimate(z_sample, q_z, x, b, x_logits,
+                                         scale_logit, pi_logit, z_dim):
     # importance sampled estimate of the marginal likelihood
     _, log_p_x_given_z, _ = log_probs(x, b, x_logits, scale_logit, pi_logit)
 
-    p_z = tfp.distributions.Normal(
-        loc=np.zeros(z_dim, dtype=np.float32), scale=np.ones(z_dim, dtype=np.float32)
-    )
+    p_z = tfp.distributions.Normal(loc=np.zeros(z_dim, dtype=np.float32),
+                                   scale=np.ones(z_dim, dtype=np.float32))
     log_p_z = tf.reduce_sum(p_z.log_prob(z_sample), -1)
     log_q_z_given_x = tf.reduce_sum(q_z.log_prob(z_sample), -1)
 
     log_s = tf.math.log(tf.constant(256, tf.float32))
 
-    marginal_ll = log_sum_exp(log_p_x_given_z + log_p_z - log_q_z_given_x) - log_s
+    marginal_ll = log_sum_exp(log_p_x_given_z + log_p_z -
+                              log_q_z_given_x) - log_s
 
     ln_2 = tf.math.log(tf.constant(2.0, tf.float32))
     num_obs_pixels = tf.reduce_sum(b[0, :, :, 0])
@@ -180,19 +175,19 @@ def train(
     mixture_components,
 ):
     """ """
+    print("num epoch: 50")
     tf.random.set_seed(run)
     np.random.seed(run)
     random.seed(run)
 
     # Metrics & Optimizer
     print(run, method)
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.legacy.Adam()
 
     train_kl_metric = tf.keras.metrics.Mean(name="train_kl")
     train_log_prob_metric = tf.keras.metrics.Mean(name="train_log_prob")
     train_imputation_log_prob_metric = tf.keras.metrics.Mean(
-        name="train_imputation_log_prob"
-    )
+        name="train_imputation_log_prob")
     train_elbo_metric = tf.keras.metrics.Mean(name="train_elbo")
     train_mse_xo_metric = tf.keras.metrics.Mean(name="train_mse_xo")
     train_mse_xm_metric = tf.keras.metrics.Mean(name="train_mse_xm")
@@ -200,8 +195,7 @@ def train(
     valid_kl_metric = tf.keras.metrics.Mean(name="valid_kl")
     valid_log_prob_metric = tf.keras.metrics.Mean(name="valid_log_prob")
     valid_imputation_log_prob_metric = tf.keras.metrics.Mean(
-        name="valid_imputation_log_prob"
-    )
+        name="valid_imputation_log_prob")
     valid_elbo_metric = tf.keras.metrics.Mean(name="valid_elbo")
     valid_mse_xo_metric = tf.keras.metrics.Mean(name="valid_mse_xo")
     valid_mse_xm_metric = tf.keras.metrics.Mean(name="valid_mse_xm")
@@ -212,9 +206,8 @@ def train(
         with tf.GradientTape() as tape:
             (x_logits, scale_logit, pi_logit), q_z, _ = model(inputs, decoder_b)
             loss_value, x_pred, log_prob, imputation_log_prob, kl = loss_fn(
-                q_z, x, b, x_logits, scale_logit, pi_logit,
-                likelihood, mixture_components, z_dim
-            )
+                q_z, x, b, x_logits, scale_logit, pi_logit, likelihood,
+                mixture_components, z_dim)
 
         grads = tape.gradient(loss_value, model.trainable_weights)
         grads, _ = tf.clip_by_global_norm(grads, 2.5)
@@ -232,11 +225,11 @@ def train(
     @tf.function
     def eval_step(x, b, inputs, decoder_b, model, validation_set=False):
         """Get model predictions for one batch and update metrics."""
-        (x_logits, scale_logit, pi_logit), q_z, z_sample = model(inputs, decoder_b)
+        (x_logits, scale_logit,
+         pi_logit), q_z, z_sample = model(inputs, decoder_b)
         loss_value, x_pred, log_prob, imputation_log_prob, kl = loss_fn(
-            q_z, x, b, x_logits, scale_logit, pi_logit,
-            likelihood, mixture_components, z_dim
-        )
+            q_z, x, b, x_logits, scale_logit, pi_logit, likelihood,
+            mixture_components, z_dim)
 
         mse_xo, mse_xm = compute_mse(b, x, x_pred)
 
@@ -282,7 +275,7 @@ def train(
     if os.path.exists(saved_model_loc):
         os.remove(saved_model_loc)
 
-    for epoch in range(200):
+    for epoch in range(50):
         for example in train_ds:
             inputs, decoder_b = get_inputs(example)
             train_step(example["x"], example["b"], inputs, decoder_b, model)
@@ -295,12 +288,10 @@ def train(
         mse_xm = train_mse_xm_metric.result().numpy()
 
         if True:
-            print(
-                f"Train set evaluation epoch: {epoch} - "
-                f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-                f"imp log prob: {imputation_log_prob}, "
-                f"mse_xo {mse_xo}, mse_xm: {mse_xm}"
-            )
+            print(f"Train set evaluation epoch: {epoch} - "
+                  f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+                  f"imp log prob: {imputation_log_prob}, "
+                  f"mse_xo {mse_xo}, mse_xm: {mse_xm}")
 
         train_kl_metric.reset_states()
         train_log_prob_metric.reset_states()
@@ -328,12 +319,10 @@ def train(
         mse_xm = valid_mse_xm_metric.result().numpy()
 
         if True:
-            print(
-                f"Valid set evaluation epoch: {epoch} - "
-                f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
-                f"imp log prob: {imputation_log_prob}, "
-                f"mse_xo {mse_xo}, mse_xm: {mse_xm}"
-            )
+            print(f"Valid set evaluation epoch: {epoch} - "
+                  f"ELBO: {elbo}, KL: {kl}, log prob: {log_prob}, "
+                  f"imp log prob: {imputation_log_prob}, "
+                  f"mse_xo {mse_xo}, mse_xm: {mse_xm}")
 
         valid_kl_metric.reset_states()
         valid_log_prob_metric.reset_states()
