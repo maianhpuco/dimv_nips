@@ -1,3 +1,6 @@
+dev:
+	ROOT=$${PWD} python exp/rand/imputing.py --ds mnist --algo vae --dryrun 1
+
 ALGOS = mean softimpute mice imputepca em knn gain ginn vae dimv 
 
 # include root folder into python search path
