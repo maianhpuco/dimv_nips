@@ -33,6 +33,13 @@ hyper:
       n_jobs: -1
       train_percent: 0.2
       initializing : False 
+    
+    vae:
+      method: 'Zero Imputation Encoder Decoder Indicators'
+      ds_name: 'MNIST'
+      z_dim: 50
+      likelihood: 'BERNOULLI'
+      mixture_components: 1
 
   rand:     
     gain:
@@ -70,6 +77,14 @@ hyper:
       n_jobs: -1
       train_percent: 1
       initializing: False
+
+    # VAE for mnist only
+    vae:
+      method: 'Zero Imputation'
+      ds_name: 'MNIST'
+      z_dim: 50
+      likelihood: 'BERNOULLI'
+      mixture_components: 1
 
 
 
