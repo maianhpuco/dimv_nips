@@ -61,7 +61,7 @@ def create_missing(
             file_name = "Xmiss.npz"
             file_path = os.path.join(save_folder, file_name)
 
-            #np.savez(file_path, Xmiss)
+            np.savez(file_path, Xmiss)
             print("save at path {}".format(file_path))
 
 

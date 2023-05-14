@@ -5,3 +5,8 @@ src/.DS_Store
 env
 data
 .gitignore
+<<<<<<< HEAD
+=======
+cfg.yml
+best_model.h5
+>>>>>>> f8c05c8a9b9ab4186e74ee893792b9173c938622

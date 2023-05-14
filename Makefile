@@ -1,6 +1,6 @@
 
 dev:
-	ROOT=$${PWD} python exp/rand/imputing.py --ds mnist --algo vae --dryrun 1
+	ROOT=$${PWD} python exp/mono/imputing.py --ds mnist --algo vae --dryrun 1
 
 
 ALGOS = mean softimpute mice imputepca em knn gain dimv # ginn, vae 
@@ -25,7 +25,7 @@ mono_missing:
 	done 
 
 rand_missing:
-	for one_ds in $(DATAS); do\
+	for one_ds in $(DATA); do\
 		ROOT=$${PWD} python3 exp/rand/missing.py --ds $$one_ds;\
 	done 
 

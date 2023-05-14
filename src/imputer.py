@@ -267,14 +267,24 @@ def vae_imputer(Xmiss, **kwargs):
     # Fitting data
     model, get_inputs = train(
         run=1,
-        method="Zero Imputation",
+        method=kwargs.get("method"),
         train_ds=train_ds,
         valid_ds=valid_ds,
-        ds_name="MNIST",
-        z_dim=50,
-        likelihood="BERNOULLI",
-        mixture_components=1,
+        ds_name=kwargs.get("ds_name"),
+        z_dim=kwargs.get("z_dim"),
+        likelihood=kwargs.get("likelihood"),
+        mixture_components=kwargs.get("mixture_components"),
     )
+    # model, get_inputs = train(
+    #     run=1,
+    #     method="Zero Imputation",
+    #     train_ds=train_ds,
+    #     valid_ds=valid_ds,
+    #     ds_name="MNIST",
+    #     z_dim=50,
+    #     likelihood="BERNOULLI",
+    #     mixture_components=1,
+    # )
 
     print("[+] Inference step")
     Xmiss = Xmiss.reshape((-1, 28, 28, 1))
@@ -291,6 +301,12 @@ def vae_imputer(Xmiss, **kwargs):
 
     results = np.concatenate(results, axis=0)
     t0 = time.time() - t0
+
+    results = results.reshape((-1, 784))
+    results = results * 255.
+
+    any_nan = np.isnan(results).any()
+    print(any_nan)
 
     return results, t0
 
