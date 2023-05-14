@@ -9,49 +9,48 @@ import yaml
 sys.path.append("")
 
 from src.imputer import *
-from src.load_data import load_data 
+from src.load_data import load_data
 from src.utils import get_directory, rmse_calc
-import json 
-import re 
+import json
+import re
 
 with open("exp/cfg.yml", "r") as f:
     cfg = yaml.safe_load(f)
 
-
 hyperparameters = lambda algo: cfg["hyper"]["mono"][algo]
 
-def get_save_path(ds_name, mrate, exp_num, create_new_exp):
-    if not os.path.exists("data/exp/mono"):
-        os.makedirs("data/exp/mono")
-    files  = os.listdir("data/exp/mono")
-    
-    print(files)
+
+def get_save_path(ds_name, mrate, exp_num, stage):
+    if not os.path.exists("data/{}/mono".format(stage)):
+        os.makedirs("data/{}/mono".format(stage))
+    files = os.listdir("data/{}/mono".format(stage))
+
     pattern = "^\d+$"
     regex = re.compile(pattern)
     integer_files = [f for f in files if regex.match(f)]
-     
-    
-    if integer_files == []: 
-        exp_num = 0 
+
+    if integer_files == []:
+        exp_num = 0
     elif exp_num is not None:
-        exp_num = exp_num 
-    elif create_new_exp == True:
-        exp_num =  np.amax(np.array([int(i) for i in integer_files])) + 1
-    else: 
-        exp_num =  np.amax(np.array([int(i) for i in integer_files]))
-    _dir = get_directory(
-            stage = 'exp', 
-            mono_or_rand  = 'mono', 
-            dataset_name = ds_name, 
-            mrate = mrate,
-            exp_num = exp_num 
-            )
+        exp_num = exp_num
+    else:
+        exp_num = np.amax(np.array([int(i) for i in integer_files]))
+    _dir = get_directory(stage=stage,
+                         mono_or_rand='mono',
+                         dataset_name=ds_name,
+                         mrate=mrate,
+                         exp_num=exp_num)
 
-    print("saved folder ", _dir)
-    return _dir 
+    return _dir
 
 
-def impute(algo, ds_name, missing_rates=None, dryrun=None, exp_num=None, create_new_exp=False):
+def impute(
+    algo,
+    ds_name,
+    missing_rates=None,
+    dryrun=None,
+    exp_num=None,
+):
 
     print("dryrun mode (1 is dryrun, 0 is actuall running): ", dryrun)
     # get_data
@@ -60,24 +59,24 @@ def impute(algo, ds_name, missing_rates=None, dryrun=None, exp_num=None, create_
 
     for mrate in missing_rates:
         print("--------------------------------------")
-        print("Missing rate: ", mrate) 
-        missing_dir = get_directory(
-            stage="missing",
-            mono_or_rand="mono",
-            dataset_name=ds_name,
-            mrate=mrate
-        )
+        print("Missing rate: ", mrate)
+
+        missing_dir = get_save_path(ds_name, mrate, exp_num, "missing")
 
         X_gtruth, y_gtruth = load_data(ds_name)
 
         if dryrun == 1:
-            X_gtruth, y_gtruth = X_gtruth[:1000, ], y_gtruth[:1000]  
-        X_miss_path  = os.path.join(missing_dir, "Xmiss.npz")
+            X_gtruth, y_gtruth = X_gtruth[
+                :1000,
+            ], y_gtruth[:1000]
+        X_miss_path = os.path.join(missing_dir, "Xmiss.npz")
 
         X_miss = np.load(X_miss_path)["arr_0"]
 
         if dryrun == 1:
-            X_miss = X_miss[:1000,]
+            X_miss = X_miss[
+                :1000,
+            ]
 
         try:
             hyperparams = hyperparameters(algo)
@@ -133,56 +132,47 @@ def impute(algo, ds_name, missing_rates=None, dryrun=None, exp_num=None, create_
         else:
             raise NotImplementedError(f"{algo} is not implemented")
 
+        print(">> Complete imputation {} with shape {}".format(
+            algo, Ximp.shape))
 
-        print(
-                ">> Complete imputation {} with shape {}"
-                .format(algo, Ximp.shape)
-            )
-        
-        save_folder = get_save_path(ds_name, mrate, exp_num, create_new_exp)
+        save_folder = get_save_path(ds_name, mrate, exp_num, "exp")
 
         mmask = np.isnan(X_miss)
         rmse = rmse_calc(X_gtruth, Ximp, mmask)
 
-        print("Algorithm: {}, Total time: {}, RMSE: {} ".format(algo, duration, rmse))
+        print("Algorithm: {}, Total time: {}, RMSE: {} ".format(
+            algo, duration, rmse))
 
-        assert np.sum(np.isnan(Ximp)) == 0, "imputed data Ximp still contain missing"
-        
+        assert np.sum(
+            np.isnan(Ximp)) == 0, "imputed data Ximp still contain missing"
 
         np.savez(os.path.join(save_folder, "X_imp_{}.npz".format(algo)), Ximp)
 
-        with open(os.path.join(save_folder, "rmse_{}.json".format(algo)), 'w') as f:
-            json.dump({"rmse": rmse, "time": duration}, f) 
+        with open(os.path.join(save_folder, "rmse_{}.json".format(algo)),
+                  'w') as f:
+            json.dump({"rmse": rmse, "time": duration}, f)
 
-        print(
-                ">> Complete save {} with at path {}"
-                .format(algo, save_folder)
-            )
+        print(">> Complete save {} with at path {}".format(algo, save_folder))
         print("--------------------------------------")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Imputing data after monotone missing created"
-    )
+        description="Imputing data after monotone missing created")
 
     parser.add_argument("--ds", type=str, default=None)
     parser.add_argument("--algo", type=str)
-    parser.add_argument("--missing_rates", type=list, default=[0.6, 0.5, 0.4])
+    parser.add_argument("--missing_rates", type=list, default=[0.4, 0.5, 0.6])
     parser.add_argument("--dryrun", type=int, default=0)
     parser.add_argument("--exp_num", type=int, default=None)
     parser.add_argument("--create_new_exp", type=int, default=None)
 
     args = parser.parse_args()
 
-    #r = get_exp_num("mnist", .5)
-
-
     impute(
-            args.algo, 
-            args.ds, 
-            missing_rates = args.missing_rates, 
-            dryrun = args.dryrun, 
-            exp_num = args.exp_num, 
-            create_new_exp = args.create_new_exp
-            )
+        args.algo,
+        args.ds,
+        missing_rates=args.missing_rates,
+        dryrun=args.dryrun,
+        exp_num=args.exp_num,
+    )
