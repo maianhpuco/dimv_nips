@@ -2,7 +2,7 @@ import tensorflow.compat.v2 as tf
 import numpy as np
 import time
 
-from includes.VAE.train import train 
+from includes.VAE.train import train
 from includes.VAE.dataset import generate_dataset
 
 from sklearn.model_selection import train_test_split

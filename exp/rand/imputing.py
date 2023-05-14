@@ -87,7 +87,7 @@ def impute(algo, ds_name, missing_rates=None, dryrun=False):
             Ximp, duration = dimv_imputer(Xmiss, **hyperparams)
 
         elif algo == "vae":
-            from src.vae_imputer import vae_imputer
+            from src.imputer import vae_imputer
             Ximp, duration = vae_imputer(Xmiss)
             # TODO: adding hyperparams
 
