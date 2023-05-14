@@ -6,3 +6,4 @@ env
 data
 .gitignore
 cfg.yml
+best_model.h5
